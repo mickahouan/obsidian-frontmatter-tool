@@ -1,0 +1,29 @@
+Contents of the file: /frontmatter_tool_project/frontmatter_tool_project/app/core/actions/delete_action.py
+
+class DeleteAction(BaseAction):
+    def __init__(self, file_path):
+        super().__init__()
+        self.file_path = file_path
+
+    def execute(self):
+        try:
+            os.remove(self.file_path)
+            print(f"Deleted: {self.file_path}")
+        except Exception as e:
+            print(f"Error deleting file: {e}")
+
+Contents of the file: /frontmatter_tool_project/frontmatter_tool_project/app/core/actions/write_action.py
+
+class WriteAction(BaseAction):
+    def __init__(self, file_path, data):
+        super().__init__()
+        self.file_path = file_path
+        self.data = data
+
+    def execute(self):
+        try:
+            with open(self.file_path, 'w') as file:
+                file.write(self.data)
+            print(f"Wrote to: {self.file_path}")
+        except Exception as e:
+            print(f"Error writing to file: {e}")

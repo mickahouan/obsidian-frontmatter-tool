@@ -1,0 +1,5 @@
+# Editable install with no version control (app==0.1.0)
+-e /home/sascha/Playground/frontmatter_tool_project
+PySide6
+python-frontmatter
+PyYAML
