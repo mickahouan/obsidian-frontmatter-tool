@@ -1,6 +1,5 @@
 # frontmatter_tool_project/app/ui_components/frontmatter_viewer.py
 from PySide6.QtWidgets import QTextEdit
-from PySide6.QtGui import QFont
 import frontmatter
 import yaml # Stelle sicher, dass PyYAML installiert ist: pip install PyYAML
 import os # Für os.path.basename
@@ -25,12 +24,12 @@ class FrontmatterViewer(QTextEdit):
         if not file_path or not os.path.isfile(file_path) or not is_supported_file(file_path):
             self.clear_viewer()
             if logger_func and file_path: # Nur loggen, wenn ein Pfad versucht wurde
-                 logger_func(f"Info: Keine Frontmatter-Anzeige für '{os.path.basename(file_path)}' (nicht unterstützt oder kein File).")
+                logger_func(f"Info: Keine Frontmatter-Anzeige für '{os.path.basename(file_path)}' (nicht unterstützt oder kein File).")
             return
         try:
             with open(file_path, "r", encoding="utf-8") as f:
                 post = frontmatter.load(f)
-            
+
             if not post.metadata:
                 self.setText(f"# Kein Frontmatter in {os.path.basename(file_path)} gefunden.")
                 if logger_func:
@@ -47,10 +46,6 @@ class FrontmatterViewer(QTextEdit):
             self.setText(f"# Fehler beim Formatieren des Frontmatters (YAML Error):\n{ye}")
             if logger_func:
                 logger_func(f"FEHLER beim Formatieren des Frontmatters für {file_path} (YAML Error): {ye}")
-        except frontmatter.parser.FMParserError as fe: # Korrekter Import in main_window
-            self.setText(f"# Fehler beim Parsen des Frontmatters:\n{fe}")
-            if logger_func:
-                logger_func(f"FEHLER beim Parsen des Frontmatters für {file_path}: {fe}")
         except Exception as e:
             self.setText(f"# Unbekannter Fehler beim Laden des Frontmatters:\n{e}")
             if logger_func:

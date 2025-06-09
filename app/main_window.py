@@ -8,7 +8,6 @@ from PySide6.QtWidgets import (
     QCheckBox,
     QDialog,
     QFileDialog,
-    QGroupBox,
     QHBoxLayout,
     QLabel,
     QLineEdit,
@@ -21,6 +20,7 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
+
 from .core.actions import (
     CheckKeyExistsAction,
     CheckKeyMissingAction,
@@ -31,11 +31,12 @@ from .core.actions import (
     WriteKeyValueAction,
 )
 from .core.actions.base_action import BaseAction
-from .core.utils import is_supported_file
+from .core.utils import is_supported_file, value_matches
 from .styles.cyberpunk_theme import get_cyberpunk_stylesheet
+from .ui_components.dialogs import KeyDialog, KeyValueDialog, RenameKeyDialog
 from .ui_components.file_explorer import FileExplorer
-from .ui_components.frontmatter_viewer import FrontmatterViewer
-from .ui_components.dialogs import KeyValueDialog, KeyDialog
+from .ui_components.frontmatter_table_viewer import FrontmatterTableViewer
+
 
 class FrontmatterTool(QMainWindow):
     def __init__(self):
@@ -51,83 +52,114 @@ class FrontmatterTool(QMainWindow):
         main_widget = QWidget()
         self.setCentralWidget(main_widget)
         top_level_layout = QVBoxLayout(main_widget)
-        top_level_layout.setContentsMargins(10, 10, 10, 10)
-        top_level_layout.setSpacing(8)
+        top_level_layout.setContentsMargins(8, 8, 8, 8)
+        top_level_layout.setSpacing(6)
 
-        dir_group = QGroupBox("Arbeitsverzeichnis")
-        dir_layout = QHBoxLayout()
-        self.dir_label = QLabel("Kein Verzeichnis ausgewählt")
-        self.dir_label.setStyleSheet("font-style: italic;")
+        # Kompakte Verzeichnisauswahl oben
+        dir_row = QHBoxLayout()
         dir_btn = QPushButton("Verzeichnis auswählen")
         dir_btn.clicked.connect(self.select_directory)
-        dir_layout.addWidget(dir_btn)
-        dir_layout.addWidget(self.dir_label, 1)
-        dir_group.setLayout(dir_layout)
-        top_level_layout.addWidget(dir_group)
+        self.dir_label = QLabel("Kein Verzeichnis ausgewählt")
+        self.dir_label.setStyleSheet("font-style: italic;")
+        dir_row.addWidget(dir_btn)
+        dir_row.addWidget(self.dir_label, 1)
+        top_level_layout.addLayout(dir_row)
 
         main_splitter = QSplitter(Qt.Orientation.Horizontal)
-
         self.tree_view = FileExplorer(parent_window=self)
+        self.tree_view.setMinimumWidth(180)
         main_splitter.addWidget(self.tree_view)
 
+        # Rechter Panelbereich
         right_panel_widget = QWidget()
+        right_panel_layout = QVBoxLayout(right_panel_widget)
+        right_panel_layout.setContentsMargins(0, 0, 0, 0)
+        right_panel_layout.setSpacing(6)
+        right_panel_widget.setMinimumWidth(350)
         sp_right = QSizePolicy(
             QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding
         )
         sp_right.setHorizontalStretch(2)
         right_panel_widget.setSizePolicy(sp_right)
-        right_panel_main_layout = QVBoxLayout(right_panel_widget)
-        right_panel_main_layout.setContentsMargins(0, 0, 0, 0)
-        right_panel_main_layout.setSpacing(8)
 
-        fm_display_group = QGroupBox("Frontmatter der ausgewählten Datei")
-        fm_display_layout = QVBoxLayout()
-        self.frontmatter_display = FrontmatterViewer(self)
-        fm_display_layout.addWidget(self.frontmatter_display)
-        fm_display_group.setLayout(fm_display_layout)
-        right_panel_main_layout.addWidget(fm_display_group, 1)
+        # Splitter für Table-View und Raw-View
+        fm_splitter = QSplitter(Qt.Orientation.Horizontal)
+        # Table-Viewer (editierbar)
+        self.frontmatter_display = FrontmatterTableViewer(self)
+        self.frontmatter_display.setMinimumHeight(120)
+        fm_splitter.addWidget(self.frontmatter_display)
+        # Raw-Viewer (readonly)
+        self.frontmatter_raw = QTextEdit(self)
+        self.frontmatter_raw.setReadOnly(True)
+        self.frontmatter_raw.setMinimumWidth(320)
+        fm_splitter.addWidget(self.frontmatter_raw)
+        fm_splitter.setSizes([500, 320])
+        right_panel_layout.addWidget(fm_splitter, 1)
+        # Speichern-Button
+        self.save_fm_btn = QPushButton("Frontmatter speichern")
+        self.save_fm_btn.clicked.connect(self.save_frontmatter_table)
+        right_panel_layout.addWidget(self.save_fm_btn)
 
-        param_group = QGroupBox("Globale Parameter für Batch-Aktionen")
-        param_fields_layout = QVBoxLayout()
-        key_value_row_layout = QHBoxLayout()
-        key_value_row_layout.addWidget(QLabel("Key/Alter Key:"))
+        # Kompakte Optionen (früher, damit Checkbox existiert)
+        options_row = QHBoxLayout()
+        self.dryrun_checkbox = QCheckBox("Dry Run")
+        self.dryrun_checkbox.setChecked(True)
+        self.only_if_key_value_checkbox = QCheckBox("Vorbedingung anwenden")
+        self.only_if_key_value_checkbox.setChecked(False)
+        options_row.addWidget(self.dryrun_checkbox)
+        options_row.addWidget(self.only_if_key_value_checkbox)
+        options_row.addStretch()
+        right_panel_layout.addLayout(options_row)
+
+        # Option für value_matches: "Alle Elemente müssen matchen"
+        self.match_all_checkbox = QCheckBox("Alle Elemente müssen matchen")
+        self.match_all_checkbox.setChecked(False)
+        options_row.addWidget(self.match_all_checkbox)
+
+        # Kompakte Parameter- und Vorbedingungszeile (jetzt nach Checkbox-Init)
+        param_row = QHBoxLayout()
+        self.key_label = QLabel("Key:")
         self.key_input = QLineEdit()
-        self.key_input.setPlaceholderText("z.B. status / old_tag")
-        key_value_row_layout.addWidget(self.key_input)
-        key_value_row_layout.addWidget(QLabel("Value:"))
+        self.key_input.setPlaceholderText("Key/Alter Key")
+        self.value_label = QLabel("Value:")
         self.value_input = QLineEdit()
         self.value_input.setPlaceholderText("Value (optional)")
-        key_value_row_layout.addWidget(self.value_input)
-        param_fields_layout.addLayout(key_value_row_layout)
-        new_key_row_layout = QHBoxLayout()
-        new_key_row_layout.addWidget(QLabel("Neuer Key:"))
+        self.newkey_label = QLabel("Neuer Key:")
         self.newkey_input = QLineEdit()
         self.newkey_input.setPlaceholderText("Neuer Key (für Umbenennen)")
-        new_key_row_layout.addWidget(self.newkey_input)
-        param_fields_layout.addLayout(new_key_row_layout)
-        param_group.setLayout(param_fields_layout)
-        right_panel_main_layout.addWidget(param_group)
-
-        precond_group = QGroupBox("Vorbedingung für Batch-Aktionen (optional)")
-        precond_layout = QHBoxLayout()
+        self.precond_label = QLabel("Vorbedingung:")
         self.precondition_key_input = QLineEdit()
         self.precondition_key_input.setPlaceholderText("Vorbedingung Key")
         self.precondition_value_input = QLineEdit()
         self.precondition_value_input.setPlaceholderText("Vorbedingung Value")
-        precond_layout.addWidget(self.precondition_key_input)
-        precond_layout.addWidget(self.precondition_value_input)
-        precond_group.setLayout(precond_layout)
-        right_panel_main_layout.addWidget(precond_group)
+        param_row.addWidget(self.key_label)
+        param_row.addWidget(self.key_input)
+        param_row.addWidget(self.value_label)
+        param_row.addWidget(self.value_input)
+        param_row.addWidget(self.newkey_label)
+        param_row.addWidget(self.newkey_input)
+        param_row.addWidget(self.precond_label)
+        param_row.addWidget(self.precondition_key_input)
+        param_row.addWidget(self.precondition_value_input)
+        right_panel_layout.addLayout(param_row)
 
-        options_group = QGroupBox("Globale Optionen")
-        options_layout = QHBoxLayout()
-        self.dryrun_checkbox = QCheckBox("Dry Run (Batch & Einzel)")
-        self.dryrun_checkbox.setChecked(True)
-        self.only_if_key_value_checkbox = QCheckBox("Vorbedingung für Batch anwenden")
-        self.only_if_key_value_checkbox.setChecked(False)
+        # Standard: Neuer Key und Label ausblenden
+        self.newkey_label.setVisible(False)
+        self.newkey_input.setVisible(False)
+        # Standard: Vorbedingung ausblenden, wenn Checkbox nicht aktiv
+        self.precond_label.setVisible(self.only_if_key_value_checkbox.isChecked())
+        self.precondition_key_input.setVisible(
+            self.only_if_key_value_checkbox.isChecked()
+        )
+        self.precondition_value_input.setVisible(
+            self.only_if_key_value_checkbox.isChecked()
+        )
 
         def update_precond_fields_enabled_state():
             enabled = self.only_if_key_value_checkbox.isChecked()
+            self.precond_label.setVisible(enabled)
+            self.precondition_key_input.setVisible(enabled)
+            self.precondition_value_input.setVisible(enabled)
             self.precondition_key_input.setEnabled(enabled)
             self.precondition_value_input.setEnabled(enabled)
 
@@ -135,64 +167,91 @@ class FrontmatterTool(QMainWindow):
             update_precond_fields_enabled_state
         )
         update_precond_fields_enabled_state()
-        options_layout.addWidget(self.dryrun_checkbox)
-        options_layout.addWidget(self.only_if_key_value_checkbox)
-        options_layout.addStretch()
-        options_group.setLayout(options_layout)
-        right_panel_main_layout.addWidget(options_group)
 
-        batch_actions_group = QGroupBox(
-            "Globale Batch-Aktionen (auf alle Dateien im Verzeichnis)"
-        )
-        batch_actions_main_layout = QVBoxLayout()
-        actions_layout_row1 = QHBoxLayout()
+        # Kompakte Batch-Aktionsleiste
+        batch_row1 = QHBoxLayout()
         btn_batch_write = QPushButton("Batch: Key/Value schreiben")
         btn_batch_remove = QPushButton("Batch: Key löschen")
         btn_batch_rename = QPushButton("Batch: Key umbenennen")
-        actions_layout_row1.addWidget(btn_batch_write)
-        actions_layout_row1.addWidget(btn_batch_remove)
-        actions_layout_row1.addWidget(btn_batch_rename)
-        batch_actions_main_layout.addLayout(actions_layout_row1)
-        actions_layout_row2 = QHBoxLayout()
+        batch_row1.addWidget(btn_batch_write)
+        batch_row1.addWidget(btn_batch_remove)
+        batch_row1.addWidget(btn_batch_rename)
+        right_panel_layout.addLayout(batch_row1)
+        batch_row2 = QHBoxLayout()
         btn_batch_check_exists = QPushButton("Batch: Key prüfen")
         btn_batch_check_missing = QPushButton("Batch: Key fehlt prüfen")
         btn_batch_check_value = QPushButton("Batch: Key/Value prüfen")
         btn_batch_delete_files = QPushButton("Batch: Dateien löschen (K/V)")
-        actions_layout_row2.addWidget(btn_batch_check_exists)
-        actions_layout_row2.addWidget(btn_batch_check_missing)
-        actions_layout_row2.addWidget(btn_batch_check_value)
-        actions_layout_row2.addWidget(btn_batch_delete_files)
-        batch_actions_main_layout.addLayout(actions_layout_row2)
-        batch_actions_group.setLayout(batch_actions_main_layout)
-        right_panel_main_layout.addWidget(batch_actions_group)
+        batch_row2.addWidget(btn_batch_check_exists)
+        batch_row2.addWidget(btn_batch_check_missing)
+        batch_row2.addWidget(btn_batch_check_value)
+        batch_row2.addWidget(btn_batch_delete_files)
+        right_panel_layout.addLayout(batch_row2)
 
-        btn_batch_delete_files.clicked.connect(self.delete_files_by_key_value)
-        btn_batch_write.clicked.connect(self.write_key_value)
-        btn_batch_remove.clicked.connect(self.remove_key)
-        btn_batch_rename.clicked.connect(self.rename_key)
-        btn_batch_check_exists.clicked.connect(self.check_key_exists)
-        btn_batch_check_missing.clicked.connect(self.check_key_missing)
-        btn_batch_check_value.clicked.connect(self.check_key_value_match)
+        # --- Dynamik für "Neuer Key"-Feld ---
+        def show_newkey_field(show: bool):
+            self.newkey_label.setVisible(show)
+            self.newkey_input.setVisible(show)
+
+        # Standard: ausblenden
+        show_newkey_field(False)
+
+        # Button-Handler für dynamisches Anzeigen
+        def batch_write_clicked():
+            show_newkey_field(False)
+            self.write_key_value()
+
+        def batch_remove_clicked():
+            show_newkey_field(False)
+            self.remove_key()
+
+        def batch_rename_clicked():
+            show_newkey_field(True)
+            self.rename_key()
+
+        def batch_check_exists_clicked():
+            show_newkey_field(False)
+            self.check_key_exists()
+
+        def batch_check_missing_clicked():
+            show_newkey_field(False)
+            self.check_key_missing()
+
+        def batch_check_value_clicked():
+            show_newkey_field(False)
+            self.check_key_value_match()
+
+        def batch_delete_files_clicked():
+            show_newkey_field(False)
+            self.delete_files_by_key_value()
+
+        btn_batch_write.clicked.connect(batch_write_clicked)
+        btn_batch_remove.clicked.connect(batch_remove_clicked)
+        btn_batch_rename.clicked.connect(batch_rename_clicked)
+        btn_batch_check_exists.clicked.connect(batch_check_exists_clicked)
+        btn_batch_check_missing.clicked.connect(batch_check_missing_clicked)
+        btn_batch_check_value.clicked.connect(batch_check_value_clicked)
+        btn_batch_delete_files.clicked.connect(batch_delete_files_clicked)
 
         main_splitter.addWidget(right_panel_widget)
-        main_splitter.setSizes([250, 550])
+        main_splitter.setSizes([200, 550])
         top_level_layout.addWidget(main_splitter, 1)
 
-        log_group = QGroupBox("Protokoll")
-        log_layout = QVBoxLayout()
+        # Protokollbereich unten
+        log_row = QHBoxLayout()
         self.log_text = QTextEdit()
+        self.log_text.setMinimumHeight(80)
         self.log_text.setReadOnly(True)
         self.log_clear_btn = QPushButton("Protokoll löschen")
         self.log_clear_btn.setObjectName("logClearButton")
         self.log_clear_btn.clicked.connect(self.clear_log)
-        log_layout.addWidget(self.log_text)
-        log_layout.addWidget(self.log_clear_btn, alignment=Qt.AlignmentFlag.AlignRight)
-        log_group.setLayout(log_layout)
-        top_level_layout.addWidget(log_group, 0)
+        log_row.addWidget(self.log_text, 1)
+        log_row.addWidget(self.log_clear_btn)
+        top_level_layout.addLayout(log_row)
 
     def on_file_selected_from_explorer(self, file_path: str | None, is_dir: bool):
         if file_path and not is_dir and is_supported_file(file_path):
-            self.frontmatter_display.display_frontmatter(file_path, self.log_message)
+            self.display_frontmatter_table(file_path)
         else:
             self.frontmatter_display.clear_viewer()
             if file_path and is_dir:
@@ -203,6 +262,127 @@ class FrontmatterTool(QMainWindow):
                 )
             elif not file_path:
                 self.log_message("Auswahl im Datei-Explorer aufgehoben.")
+
+    def display_frontmatter_table(self, file_path: str):
+        import re
+
+        import frontmatter
+        import yaml
+
+        self._current_frontmatter_file = file_path
+        try:
+            with open(file_path, "r", encoding="utf-8") as f:
+                raw = f.read()
+                post = frontmatter.loads(raw)
+            # Raw-Ansicht aktualisieren (zeigt den YAML-Block wie in Obsidian)
+            fm_block = self._extract_frontmatter_block(raw)
+            self.frontmatter_raw.setPlainText(fm_block)
+            if not post.metadata:
+                self.frontmatter_display.clear_viewer()
+                self.frontmatter_display.display_frontmatter({})
+                self.log_message(
+                    f"Info: Kein Frontmatter in {os.path.basename(file_path)} gefunden.",
+                    level="warn",
+                )
+                return
+            meta = {}
+            for k, v in post.metadata.items():
+                # Typ-Erkennung
+                if isinstance(v, list):
+                    typ = "Liste"
+                elif isinstance(v, bool):
+                    typ = "Checkbox"
+                elif isinstance(v, int) or (isinstance(v, str) and v.isdigit()):
+                    typ = "Zahl"
+                elif isinstance(v, str):
+                    # Datum/Uhrzeit grob erkennen
+                    if re.match(r"^\d{4}-\d{2}-\d{2}$", v):
+                        typ = "Datum"
+                    elif re.match(r"^\d{4}-\d{2}-\d{2} \d{2}:\d{2}", v):
+                        typ = "Datum und Uhrzeit"
+                    else:
+                        typ = "Text"
+                else:
+                    typ = "Text"
+                meta[k] = (v, typ)
+            self.frontmatter_display.display_frontmatter(meta)
+        except yaml.YAMLError as ye:
+            self.frontmatter_display.clear_viewer()
+            self.frontmatter_raw.clear()
+            self.log_message(
+                f"FEHLER: Ungültiges YAML in {os.path.basename(file_path)}: {ye}",
+                level="error",
+            )
+        except Exception as e:
+            self.frontmatter_display.clear_viewer()
+            self.frontmatter_raw.clear()
+            self.log_message(
+                f"FEHLER beim Anzeigen von Frontmatter: {e}", level="error"
+            )
+
+    def _extract_frontmatter_block(self, raw: str) -> str:
+        """Extrahiert den ersten --- ... --- Block (YAML Frontmatter) aus dem Text."""
+        import re
+
+        m = re.search(r"^---\s*\n(.*?\n)---", raw, re.DOTALL | re.MULTILINE)
+        if m:
+            return f"---\n{m.group(1)}---"
+        return ""
+
+    def save_frontmatter_table(self):
+        import ast
+
+        import frontmatter
+
+        file_path = getattr(self, "_current_frontmatter_file", None)
+        if not file_path:
+            self.log_message("Kein Frontmatter-File ausgewählt.")
+            return
+        meta = self.frontmatter_display.get_metadata()
+        new_meta = {}
+        for k, (v, typ) in meta.items():
+            if typ == "Liste":
+                # Versuche, Python- oder YAML-Liste zu parsen
+                try:
+                    # Versuche Python-Literal (z.B. ['foo', 'bar'])
+                    parsed = ast.literal_eval(v)
+                    if isinstance(parsed, list):
+                        new_meta[k] = parsed
+                    else:
+                        new_meta[k] = [str(parsed)]
+                except Exception:
+                    # Fallback: Kommagetrennt splitten
+                    if "," in v:
+                        new_meta[k] = [s.strip() for s in v.split(",") if s.strip()]
+                    else:
+                        new_meta[k] = [v.strip()] if v.strip() else []
+            elif typ == "Zahl":
+                try:
+                    new_meta[k] = int(v)
+                except Exception:
+                    new_meta[k] = v
+            elif typ == "Checkbox":
+                new_meta[k] = v.lower() in ("true", "1", "yes", "x", "checked")
+            elif typ == "Datum" or typ == "Datum und Uhrzeit":
+                new_meta[k] = v  # Als String speichern
+            else:
+                new_meta[k] = v
+        try:
+            with open(file_path, "r", encoding="utf-8") as f:
+                post = frontmatter.load(f)
+            post.metadata = new_meta
+            with open(file_path, "wb") as f:
+                frontmatter.dump(post, f, encoding="utf-8")
+            self.log_message(
+                f"Frontmatter gespeichert für {os.path.basename(file_path)}.",
+                level="success",
+            )
+            # Nach dem Speichern Raw-Ansicht aktualisieren
+            self.display_frontmatter_table(file_path)
+        except Exception as e:
+            self.log_message(
+                f"FEHLER beim Speichern des Frontmatters: {e}", level="error"
+            )
 
     def select_directory(self):
         dir_path = QFileDialog.getExistingDirectory(
@@ -215,8 +395,31 @@ class FrontmatterTool(QMainWindow):
             self.tree_view.set_root_directory(dir_path)
             self.frontmatter_display.clear_viewer()
 
-    def log_message(self, msg: str):
-        self.log_text.append(msg)
+    def log_message(self, msg: str, level: str = "info"):
+        """
+        Fügt eine formatierte Log-Nachricht ins Protokoll ein.
+        level: info, warn, error, success
+        """
+        emoji = {
+            "info": "ℹ️",
+            "warn": "⚠️",
+            "error": "❌",
+            "success": "✅",
+        }.get(level, "ℹ️")
+        color = {
+            "info": "#7fd7ff",
+            "warn": "#ffd966",
+            "error": "#fb464c",
+            "success": "#b6f77c",
+        }.get(level, "#7fd7ff")
+        style = {
+            "info": "font-weight:normal;",
+            "warn": "font-weight:bold;",
+            "error": "font-weight:bold;",
+            "success": "font-weight:bold;",
+        }.get(level, "font-weight:normal;")
+        html = f'<span style="color:{color};{style}">{emoji} {msg}</span>'
+        self.log_text.append(html)
         QApplication.processEvents()
 
     def clear_log(self):
@@ -225,13 +428,16 @@ class FrontmatterTool(QMainWindow):
     def handle_single_file_delete(self, file_path: str):
         if not (file_path and os.path.isfile(file_path)):
             self.log_message(
-                f"Fehler: Datei '{file_path}' nicht gefunden für Löschaktion."
+                f"Fehler: Datei '{file_path}' nicht gefunden für Löschaktion.",
+                level="error",
             )
             return
         dryrun = self.dryrun_checkbox.isChecked()
         base_name = os.path.basename(file_path)
         if dryrun:
-            self.log_message(f"[DryRun] Einzel: Datei '{base_name}' würde gelöscht.")
+            self.log_message(
+                f"[DryRun] Einzel: Datei '{base_name}' würde gelöscht.", level="warn"
+            )
             return
         reply = QMessageBox.question(
             self,
@@ -243,19 +449,29 @@ class FrontmatterTool(QMainWindow):
         if reply == QMessageBox.StandardButton.Yes:
             try:
                 os.remove(file_path)
-                self.log_message(f"Einzel: Datei '{base_name}' ({file_path}) gelöscht.")
+                self.log_message(
+                    f"Einzel: Datei '{base_name}' ({file_path}) gelöscht.",
+                    level="success",
+                )
                 self.frontmatter_display.clear_viewer()
             except Exception as e:
-                self.log_message(f"Fehler beim Löschen der Datei '{base_name}': {e}")
+                self.log_message(
+                    f"FEHLER beim Löschen der Datei '{base_name}': {e}", level="error"
+                )
         else:
-            self.log_message(f"Einzel: Löschen der Datei '{base_name}' abgebrochen.")
+            self.log_message(
+                f"Einzel: Löschen der Datei '{base_name}' abgebrochen.", level="warn"
+            )
+
+    # Innerhalb der Klasse FrontmatterTool(QMainWindow) in app/main_window.py:
 
     def handle_single_file_write_kv(self, file_path: str):
         if not (
             file_path and os.path.isfile(file_path) and is_supported_file(file_path)
         ):
             self.log_message(
-                f"Fehler: Datei '{file_path}' nicht unterstützt oder nicht gefunden für Key/Value schreiben."
+                f"Fehler: Datei '{file_path}' nicht unterstützt oder nicht gefunden für Key/Value schreiben.",
+                level="error",
             )
             return
 
@@ -263,97 +479,180 @@ class FrontmatterTool(QMainWindow):
         dialog = KeyValueDialog(
             self,
             window_title=f"Key/Value für '{base_name}' schreiben",
-            key_label="Ziel-Key:", # Klarere Beschriftung
-            value_label="Neuer Wert:"
+            key_label="Ziel-Key:",
+            value_label="Neuer Wert:",
         )
 
         if dialog.exec() == QDialog.DialogCode.Accepted:
-            values = dialog.get_values()
-            if values:
-                key, value = values
-
-                if not key:
-                    QMessageBox.warning(self, "Eingabefehler", "Einzel: Key darf im Dialog nicht leer sein.")
-                    self.log_message(f"Einzel: Key/Value schreiben für '{base_name}' abgebrochen - Key im Dialog war leer.")
+            dialog_values = dialog.get_values()  # Werte aus dem Dialog holen
+            if dialog_values:
+                key_from_dialog, raw_value_from_dialog = dialog_values
+                if not key_from_dialog:
+                    QMessageBox.warning(
+                        self,
+                        "Eingabefehler",
+                        "Einzel: Key darf im Dialog nicht leer sein.",
+                    )
+                    self.log_message(
+                        f"FEHLER: Einzel: Key/Value schreiben für '{base_name}' abgebrochen - Key im Dialog war leer.",
+                        level="error",
+                    )
                     return
+
+                # Logik zur Umwandlung des rohen Dialogwerts in eine Liste oder Beibehaltung als String
+                final_value_to_write: object
+                if (
+                    isinstance(raw_value_from_dialog, str)
+                    and "," in raw_value_from_dialog
+                ):
+                    final_value_to_write = [
+                        s.strip() for s in raw_value_from_dialog.split(",") if s.strip()
+                    ]
+                else:
+                    final_value_to_write = raw_value_from_dialog
 
                 dryrun = self.dryrun_checkbox.isChecked()
                 try:
                     with open(file_path, "r", encoding="utf-8") as f_in:
                         post = frontmatter.load(f_in)
-                    original_value = post.metadata.get(key)
-                    action_description = f"Key '{key}' auf Wert '{value}' setzen"
 
-                    if str(original_value) != str(value):
+                    original_value_in_post = post.metadata.get(
+                        key_from_dialog
+                    )  # Wert aus der Datei holen
+
+                    changed = False
+                    if type(original_value_in_post) != type(final_value_to_write):
+                        changed = True
+                    elif isinstance(final_value_to_write, list):
+                        original_list = (
+                            original_value_in_post
+                            if isinstance(original_value_in_post, list)
+                            else []
+                        )
+                        if sorted(original_list) != sorted(final_value_to_write):
+                            changed = True
+                    elif str(original_value_in_post) != str(final_value_to_write):
+                        changed = True
+
+                    action_description = f"Key '{key_from_dialog}' auf Wert '{final_value_to_write}' setzen"
+
+                    if changed:
                         if dryrun:
-                            self.log_message(f"[DryRun] Einzel: In '{base_name}': {action_description} (Wert war: '{original_value}').")
+                            self.log_message(
+                                f"[DryRun] Einzel: In '{base_name}': {action_description} (Wert war: '{original_value_in_post}').",
+                                level="warn",
+                            )
                         else:
-                            post.metadata[key] = value
+                            post.metadata[key_from_dialog] = final_value_to_write
                             try:
-                                with open(file_path, 'wb') as f_out:
-                                    frontmatter.dump(post, f_out, encoding='utf-8')
-                                self.log_message(f"Einzel: In '{base_name}': {action_description} (Wert war: '{original_value}').")
-                                self.frontmatter_display.display_frontmatter(file_path, self.log_message)
+                                with open(file_path, "wb") as f_out:
+                                    frontmatter.dump(post, f_out, encoding="utf-8")
+                                self.log_message(
+                                    f"Einzel: In '{base_name}': {action_description} (Wert war: '{original_value_in_post}').",
+                                    level="success",
+                                )
+                                self.display_frontmatter_table(file_path)
                             except Exception as save_e:
-                                self.log_message(f"FEHLER beim Speichern (Einzel-Schreiben) von '{base_name}': {save_e}")
+                                self.log_message(
+                                    f"FEHLER beim Speichern (Einzel-Schreiben) von '{base_name}': {save_e}",
+                                    level="error",
+                                )
                     else:
-                        self.log_message(f"Einzel: In '{base_name}': Key '{key}' hat bereits Wert '{value}'. Nichts geändert.")
+                        self.log_message(
+                            f"Info: Einzel: In '{base_name}': Key '{key_from_dialog}' hat bereits Wert '{original_value_in_post}'. Keine Änderung.",
+                            level="warn",
+                        )
                 except yaml.YAMLError as ye:
-                    self.log_message(f"FEHLER: Ungültiges YAML (Einzel-Schreiben) in '{base_name}': {ye}")
+                    self.log_message(
+                        f"FEHLER: Ungültiges YAML (Einzel-Schreiben) in '{base_name}': {ye}",
+                        level="error",
+                    )
                 except Exception as e:
-                    self.log_message(f"Fehler beim Einzel-Schreiben von Key/Value in '{base_name}': {e}")
-            # else-Block für "keine Werte vom Dialog" ist hier weniger relevant, da get_values() None nur bei Reject zurückgibt
+                    self.log_message(
+                        f"FEHLER beim Einzel-Schreiben von Key/Value in '{base_name}': {e}",
+                        level="error",
+                    )
         else:
-            self.log_message(f"Einzel: Key/Value schreiben für '{base_name}' abgebrochen (Dialog geschlossen).")
+            self.log_message(
+                f"Einzel: Key/Value schreiben für '{base_name}' abgebrochen (Dialog geschlossen).",
+                level="warn",
+            )
 
     def handle_single_file_remove_key(self, file_path: str):
-        if not (file_path and os.path.isfile(file_path) and is_supported_file(file_path)):
-            self.log_message(f"Fehler: Datei '{file_path}' nicht unterstützt oder nicht gefunden für Key entfernen.")
+        if not (
+            file_path and os.path.isfile(file_path) and is_supported_file(file_path)
+        ):
+            self.log_message(
+                f"Fehler: Datei '{file_path}' nicht unterstützt oder nicht gefunden für Key entfernen.",
+                level="error",
+            )
             return
 
         base_name = os.path.basename(file_path)
-        dialog = KeyDialog( # Neuer KeyDialog wird verwendet
+        dialog = KeyDialog(  # Neuer KeyDialog wird verwendet
             self,
             window_title=f"Key aus '{base_name}' entfernen",
-            key_label="Zu löschender Key:"
+            key_label="Zu löschender Key:",
         )
 
         if dialog.exec() == QDialog.DialogCode.Accepted:
-            key_to_delete = dialog.get_key() # Key aus dem Dialog holen
-
-            if not key_to_delete: # Prüfen, ob ein Key eingegeben wurde
-                QMessageBox.warning(self, "Eingabefehler", "Einzel: Key darf im Dialog nicht leer sein.")
-                self.log_message(f"Einzel: Key entfernen für '{base_name}' abgebrochen - Key im Dialog war leer.")
+            key_to_delete = dialog.get_key()  # Key aus dem Dialog holen
+            if not key_to_delete:  # Prüfen, ob ein Key eingegeben wurde
+                QMessageBox.warning(
+                    self, "Eingabefehler", "Einzel: Key darf im Dialog nicht leer sein."
+                )
+                self.log_message(
+                    f"FEHLER: Einzel: Key entfernen für '{base_name}' abgebrochen - Key im Dialog war leer.",
+                    level="error",
+                )
                 return
-
             dryrun = self.dryrun_checkbox.isChecked()
             try:
-                # Ladeoperation MUSS hier innerhalb des try-Blocks sein
                 with open(file_path, "r", encoding="utf-8") as f_in:
                     post = frontmatter.load(f_in)
 
                 if key_to_delete in post.metadata:
                     original_value = post.metadata[key_to_delete]
                     if dryrun:
-                        self.log_message(f"[DryRun] Einzel: In '{base_name}': Key '{key_to_delete}' (Wert: '{original_value}') würde gelöscht.")
+                        self.log_message(
+                            f"[DryRun] Einzel: In '{base_name}': Key '{key_to_delete}' (Wert: '{original_value}') würde gelöscht.",
+                            level="warn",
+                        )
                     else:
                         del post.metadata[key_to_delete]
                         try:
                             with open(file_path, "wb") as f_out:
                                 frontmatter.dump(post, f_out, encoding="utf-8")
-                            self.log_message(f"Einzel: In '{base_name}': Key '{key_to_delete}' gelöscht.")
-                            self.frontmatter_display.display_frontmatter(file_path, self.log_message)
+                            self.log_message(
+                                f"Einzel: In '{base_name}': Key '{key_to_delete}' gelöscht. (Wert war: '{original_value}')",
+                                level="success",
+                            )
+                            self.display_frontmatter_table(file_path)
                         except Exception as save_e:
-                            self.log_message(f"FEHLER beim Speichern (Einzel-Löschen) von '{base_name}': {save_e}")
+                            self.log_message(
+                                f"FEHLER beim Speichern (Einzel-Löschen) von '{base_name}': {save_e}",
+                                level="error",
+                            )
                 else:
-                    self.log_message(f"Einzel: In '{base_name}': Key '{key_to_delete}' nicht gefunden. Nichts gelöscht.")
-
+                    self.log_message(
+                        f"Info: Einzel: In '{base_name}': Key '{key_to_delete}' nicht gefunden. Keine Änderung.",
+                        level="warn",
+                    )
             except yaml.YAMLError as ye:
-                self.log_message(f"FEHLER: Ungültiges YAML (Einzel-Löschen) in '{base_name}': {ye}")
+                self.log_message(
+                    f"FEHLER: Ungültiges YAML (Einzel-Löschen) in '{base_name}': {ye}",
+                    level="error",
+                )
             except Exception as e:
-                self.log_message(f"Fehler beim Einzel-Löschen von Key '{key_to_delete}' in '{base_name}': {e}")
+                self.log_message(
+                    f"FEHLER beim Einzel-Löschen von Key '{key_to_delete}' in '{base_name}': {e}",
+                    level="error",
+                )
         else:
-            self.log_message(f"Einzel: Key entfernen für '{base_name}' abgebrochen (Dialog geschlossen).")
+            self.log_message(
+                f"Einzel: Key entfernen für '{base_name}' abgebrochen (Dialog geschlossen).",
+                level="warn",
+            )
 
     def set_directory_from_tree(self, dir_path: str):
         if os.path.isdir(dir_path):
@@ -403,12 +702,15 @@ class FrontmatterTool(QMainWindow):
                 if only_if_key_value:
                     cond_key_to_check = precondition_key_ui
                     cond_value_to_check = precondition_value_ui
+                    match_all = self.match_all_checkbox.isChecked()
                     if not cond_key_to_check:
                         pass
-                    elif not (
-                        cond_key_to_check in post.metadata
-                        and str(post.metadata[cond_key_to_check])
-                        == str(cond_value_to_check)
+                    elif cond_key_to_check not in post.metadata:
+                        continue
+                    elif not value_matches(
+                        post.metadata[cond_key_to_check],
+                        cond_value_to_check,
+                        match_all_in_list=match_all,
                     ):
                         continue
 
@@ -617,3 +919,90 @@ class FrontmatterTool(QMainWindow):
         self.log_message(
             f"Batch-Aktion '{action_name}' ist noch nicht auf die neue Struktur umgestellt."
         )
+
+    def handle_single_file_rename_key(self, file_path: str):
+        if not (
+            file_path and os.path.isfile(file_path) and is_supported_file(file_path)
+        ):
+            self.log_message(
+                f"Fehler: Datei '{file_path}' nicht unterstützt oder nicht gefunden für Key umbenennen."
+            )
+            return
+        base_name = os.path.basename(file_path)
+        dialog = RenameKeyDialog(
+            self,
+            window_title=f"Key umbenennen in '{base_name}'",
+            old_key_label="Alter Key:",
+            new_key_label="Neuer Key:",
+        )
+        if dialog.exec() == QDialog.DialogCode.Accepted:
+            keys = dialog.get_keys()
+            if keys:
+                old_key, new_key = keys
+                if not old_key or not new_key:
+                    QMessageBox.warning(
+                        self, "Eingabefehler", "Beide Felder müssen ausgefüllt sein."
+                    )
+                    self.log_message(
+                        f"FEHLER: Einzel: Key umbenennen für '{base_name}' abgebrochen - Key im Dialog war leer.",
+                        level="error",
+                    )
+                    return
+                if old_key == new_key:
+                    QMessageBox.information(
+                        self,
+                        "Info",
+                        "Alter und neuer Key sind identisch. Keine Änderung.",
+                    )
+                    self.log_message(
+                        f"Info: Einzel: In '{base_name}': Alter und neuer Key identisch. Keine Änderung.",
+                        level="warn",
+                    )
+                    return
+                dryrun = self.dryrun_checkbox.isChecked()
+                try:
+                    with open(file_path, "r", encoding="utf-8") as f_in:
+                        post = frontmatter.load(f_in)
+                    if old_key not in post.metadata:
+                        self.log_message(
+                            f"Info: Einzel: In '{base_name}': Alter Key '{old_key}' nicht gefunden. Keine Änderung.",
+                            level="warn",
+                        )
+                        return
+                    value_to_move = post.metadata[old_key]
+                    if dryrun:
+                        self.log_message(
+                            f"[DryRun] Einzel: In '{base_name}': Key '{old_key}' würde zu '{new_key}' umbenannt (Wert: '{value_to_move}').",
+                            level="warn",
+                        )
+                    else:
+                        del post.metadata[old_key]
+                        post.metadata[new_key] = value_to_move
+                        try:
+                            with open(file_path, "wb") as f_out:
+                                frontmatter.dump(post, f_out, encoding="utf-8")
+                            self.log_message(
+                                f"Einzel: In '{base_name}': Key '{old_key}' zu '{new_key}' umbenannt (Wert: '{value_to_move}').",
+                                level="success",
+                            )
+                            self.display_frontmatter_table(file_path)
+                        except Exception as save_e:
+                            self.log_message(
+                                f"FEHLER beim Speichern (Einzel-Umbenennen) von '{base_name}': {save_e}",
+                                level="error",
+                            )
+                except yaml.YAMLError as ye:
+                    self.log_message(
+                        f"FEHLER: Ungültiges YAML (Einzel-Umbenennen) in '{base_name}': {ye}",
+                        level="error",
+                    )
+                except Exception as e:
+                    self.log_message(
+                        f"FEHLER beim Einzel-Umbenennen von Key in '{base_name}': {e}",
+                        level="error",
+                    )
+        else:
+            self.log_message(
+                f"Einzel: Key umbenennen für '{base_name}' abgebrochen (Dialog geschlossen).",
+                level="warn",
+            )

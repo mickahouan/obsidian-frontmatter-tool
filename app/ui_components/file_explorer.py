@@ -99,6 +99,12 @@ class FileExplorer(QTreeView):
                     fp=file_path: self.parent_window.handle_single_file_remove_key(fp)
                 )
                 menu.addAction(remove_key_action)
+                rename_key_action = QAction("Einzel: Key umbenennen...", self)
+                rename_key_action.triggered.connect(
+                    lambda checked=False,
+                    fp=file_path: self.parent_window.handle_single_file_rename_key(fp)
+                )
+                menu.addAction(rename_key_action)
                 menu.addSeparator()
                 delete_file_action = QAction("Einzel: Datei löschen", self)
                 delete_file_action.triggered.connect(

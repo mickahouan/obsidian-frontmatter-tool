@@ -1,6 +1,7 @@
 # frontmatter_tool_project/app/core/actions/check_key_exists_action.py
-from .base_action import BaseAction
 import os
+
+from .base_action import BaseAction
 
 
 class CheckKeyExistsAction(BaseAction):
@@ -25,8 +26,8 @@ class CheckKeyExistsAction(BaseAction):
             )
             return (
                 True,
-                f"Key '{key_to_check}' vorhanden",
-            )  # Gibt True zurück, um als "betroffen" zu zählen
+                f"Key '{key_to_check}' vorhanden (Wert: '{value}')",
+            )
         else:
-            # self.logger(f"Info: In '{base_name}': Key '{key_to_check}' nicht gefunden.")
-            return False, f"Key '{key_to_check}' nicht gefunden"
+            self.logger(f"Info: In '{base_name}': Key '{key_to_check}' nicht gefunden.")
+            return False, f"Key '{key_to_check}' nicht gefunden."

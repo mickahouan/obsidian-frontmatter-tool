@@ -59,14 +59,14 @@ shiboken6 = "6.9.0"
 
 [[package]]
 name = "python-frontmatter"
-version = "1.0.0"
+version = "1.1.0"
 description = "Parse and manage posts with YAML (or other) frontmatter"
 optional = false
 python-versions = "*"
 groups = ["main"]
 files = [
-    {file = "python-frontmatter-1.0.0.tar.gz", hash = "sha256:e98152e977225ddafea6f01f40b4b0f1de175766322004c826ca99842d19a7cd"},
-    {file = "python_frontmatter-1.0.0-py3-none-any.whl", hash = "sha256:766ae75f1b301ffc5fe3494339147e0fd80bc3deff3d7590a93991978b579b08"},
+    {file = "python-frontmatter-1.1.0.tar.gz", hash = "sha256:7118d2bd56af9149625745c58c9b51fb67e8d1294a0c76796dafdc72c36e5f6d"},
+    {file = "python_frontmatter-1.1.0-py3-none-any.whl", hash = "sha256:335465556358d9d0e6c98bbeb69b1c969f2a4a21360587b9873bfc3b213407c1"},
 ]
 
 [package.dependencies]
@@ -74,7 +74,7 @@ PyYAML = "*"
 
 [package.extras]
 docs = ["sphinx"]
-test = ["pyaml", "pytest", "toml"]
+test = ["mypy", "pyaml", "pytest", "toml", "types-PyYAML", "types-toml"]
 
 [[package]]
 name = "pyyaml"
@@ -157,4 +157,4 @@ files = [
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.12,<3.14"
-content-hash = "075d1bda53ccbb0767b7b9507c02284415a809fe33d59802794be027709aa0a5"
+content-hash = "6d6516da2981d83ffc46397b9f30257578931cbad66db017ec04935ff2eb4f7d"

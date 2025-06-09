@@ -1,5 +1,6 @@
 # frontmatter_tool_project/app/styles/cyberpunk_theme.py
 
+
 def get_cyberpunk_stylesheet() -> str:
     """
     Gibt das benutzerdefinierte Stylesheet für das Cyberpunk-Design als String zurück.
@@ -47,8 +48,8 @@ def get_cyberpunk_stylesheet() -> str:
             color: hsl(191, 54%, 64%);
             border: 1px solid hsl(225, 11%, 30%);
             border-radius: 3px;
-            padding: 7px;
-            font-size: 14px;
+            padding: 5px;
+            font-size: 13px;
         }
 
         QLineEdit::placeholder {
@@ -61,16 +62,18 @@ def get_cyberpunk_stylesheet() -> str:
 
         QTextEdit {
             font-family: 'Dank Mono', 'Fira Code', Courier, monospace;
-            font-size: 14px;
+            font-size: 13px;
         }
 
         QPushButton {
             background-color: hsl(225, 18%, 25%);
             color: hsl(220, 23%, 95%);
             border: 1px solid hsl(225, 11%, 36%);
-            padding: 8px 15px;
+            padding: 4px 10px;
             border-radius: 3px;
-            font-weight: bold;
+            font-weight: normal;
+            font-size: 13px;
+            min-height: 24px;
         }
 
         QPushButton:hover {
@@ -85,7 +88,8 @@ def get_cyberpunk_stylesheet() -> str:
         QPushButton#logClearButton {
             background-color: #fb464c;
             color: white;
-            font-weight: bold;
+            font-weight: normal;
+            font-size: 13px;
         }
         QPushButton#logClearButton:hover {
             background-color: hsl(3, 93%, 60%);
@@ -95,10 +99,10 @@ def get_cyberpunk_stylesheet() -> str:
         }
 
         QCheckBox {
-            font-size: 14px;
+            font-size: 13px;
             color: hsl(224, 37%, 80%);
             spacing: 8px;
-            padding: 5px 0px;
+            padding: 3px 0px;
         }
 
         QCheckBox::indicator {

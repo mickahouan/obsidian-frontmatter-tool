@@ -1,4 +1,14 @@
 {
   "python-envs.defaultEnvManager": "ms-python.python:system",
-  "python-envs.pythonProjects": []
+  "python-envs.pythonProjects": [],
+  "cSpell.words": [
+    "dryrun",
+    "Frontmatters",
+    "Kommagetrennt",
+    "newkey",
+    "Panelbereich",
+    "parsen",
+    "precond",
+    "Typkonvertierung"
+  ]
 }

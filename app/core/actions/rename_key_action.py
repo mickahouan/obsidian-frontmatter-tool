@@ -1,6 +1,7 @@
 # frontmatter_tool_project/app/core/actions/rename_key_action.py
-from .base_action import BaseAction
 import os
+
+from .base_action import BaseAction
 
 
 class RenameKeyAction(BaseAction):
@@ -21,8 +22,13 @@ class RenameKeyAction(BaseAction):
             return False, "Alter oder neuer Key nicht spezifiziert"
 
         if old_key_name == new_key_name:
-            # Diese Bedingung sollte idealerweise schon im UI-Handler abgefangen werden.
-            return False, f"Alter und neuer Key ('{old_key_name}') identisch"
+            self.logger(
+                f"Info: In '{base_name}': Alter und neuer Key ('{old_key_name}') identisch. Keine Änderung."
+            )
+            return (
+                False,
+                f"Alter und neuer Key ('{old_key_name}') identisch. Keine Änderung.",
+            )
 
         if old_key_name in post.metadata:
             value_to_move = post.metadata[old_key_name]
@@ -34,7 +40,6 @@ class RenameKeyAction(BaseAction):
             if new_key_name in post.metadata:
                 existing_new_key_value = post.metadata[new_key_name]
                 warning_message_part = f" (Warnung: Neuer Key '{new_key_name}' existierte mit Wert '{existing_new_key_value}' und wurde überschrieben!)"
-                # Logge die Warnung direkt
                 log_prefix = "[DryRun] " if self.is_dry_run else ""
                 self.logger(
                     f"{log_prefix}In '{base_name}':{warning_message_part.strip()}"
@@ -47,16 +52,15 @@ class RenameKeyAction(BaseAction):
                 )
                 return (
                     True,
-                    f"würde Key '{old_key_name}' zu '{new_key_name}' umbenennen{warning_message_part}",
+                    f"[DryRun] Key '{old_key_name}' würde zu '{new_key_name}' umbenannt werden.{warning_message_part} {log_detail}",
                 )
             else:
                 del post.metadata[old_key_name]
                 post.metadata[new_key_name] = value_to_move
                 if self._save_changes(post, file_path, action_description_for_log):
-                    # Haupt-Erfolgsmeldung kommt von _save_changes, Warnung wurde schon geloggt.
                     return (
                         True,
-                        f"Key '{old_key_name}' zu '{new_key_name}' umbenannt{warning_message_part}",
+                        f"Key '{old_key_name}' zu '{new_key_name}' umbenannt.{warning_message_part}",
                     )
                 else:
                     return (
@@ -64,4 +68,7 @@ class RenameKeyAction(BaseAction):
                         f"Fehler beim Speichern nach Umbenennung von '{old_key_name}'",
                     )
         else:
-            return False, f"Alter Key '{old_key_name}' nicht gefunden"
+            self.logger(
+                f"Info: In '{base_name}': Alter Key '{old_key_name}' nicht gefunden. Keine Änderung."
+            )
+            return False, f"Alter Key '{old_key_name}' nicht gefunden. Keine Änderung."

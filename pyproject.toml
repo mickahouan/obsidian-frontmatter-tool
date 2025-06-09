@@ -2,12 +2,15 @@
 name = "app"
 version = "0.1.0"
 description = ""
+authors = [
+    {name = "Your Name",email = "you@example.com"}
+]
 readme = "README.md"
 requires-python = ">=3.12,<3.14"
 dependencies = [
-    "python-frontmatter (==1.0.0)",
-    "pyyaml (>=6.0.2,<7.0.0)",
-    "pyside6 (>=6.9.0,<7.0.0)"
+    "python-frontmatter (>=1.1.0,<2.0.0)",
+    "pyside6 (>=6.9.0,<7.0.0)",
+    "pyyaml (>=6.0.2,<7.0.0)"
 ]
 
 
