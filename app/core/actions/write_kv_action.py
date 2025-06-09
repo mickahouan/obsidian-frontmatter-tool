@@ -1,4 +1,7 @@
-# frontmatter_tool_project/app/core/actions/write_kv_action.py
+"""
+Aktion: Schreibt oder überschreibt ein Key/Value-Paar im Frontmatter.
+"""
+
 import os
 
 from .base_action import BaseAction
@@ -6,6 +9,7 @@ from .base_action import BaseAction
 
 class WriteKeyValueAction(BaseAction):
     def get_description(self) -> str:
+        """Beschreibung der Aktion für das Logging."""
         key = self.params.get("key", "UNBEKANNTER_KEY")
         value_param = self.params.get("value", "")
         if isinstance(value_param, str) and "," in value_param:
@@ -17,6 +21,7 @@ class WriteKeyValueAction(BaseAction):
             )
 
     def execute_on_file_logic(self, post, file_path: str) -> tuple[bool, str]:
+        """Schreibt oder überschreibt das Key/Value-Paar im Frontmatter."""
         key_to_write = self.params.get("key")
         raw_value_to_write = self.params.get("value")
         base_name = os.path.basename(file_path)

@@ -1,4 +1,7 @@
-# frontmatter_tool_project/app/core/actions/delete_files_by_kv_action.py
+"""
+Aktion: Löscht Dateien, wenn ein Key einen bestimmten Wert hat.
+"""
+
 import os
 
 from .base_action import BaseAction
@@ -6,11 +9,13 @@ from .base_action import BaseAction
 
 class DeleteFilesByKeyValueAction(BaseAction):
     def get_description(self) -> str:
+        """Beschreibung der Aktion für das Logging."""
         key = self.params.get("key", "UNBEKANNTER_KEY")
         value = self.params.get("value", "UNBEKANNTER_WERT")
         return f"Batch: Dateien löschen, wenn Key '{key}' den Wert '{value}' hat"
 
     def execute_on_file_logic(self, post, file_path: str) -> tuple[bool, str]:
+        """Löscht die Datei, wenn der Key den gewünschten Wert hat."""
         key_to_match = self.params.get("key")
         value_to_match = self.params.get("value")
         base_name = os.path.basename(file_path)

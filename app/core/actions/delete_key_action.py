@@ -1,4 +1,7 @@
-# frontmatter_tool_project/app/core/actions/delete_key_action.py
+"""
+Aktion: Entfernt einen Key aus dem Frontmatter.
+"""
+
 import os  # Für os.path.basename
 
 from .base_action import BaseAction
@@ -6,10 +9,12 @@ from .base_action import BaseAction
 
 class DeleteKeyAction(BaseAction):
     def get_description(self) -> str:
+        """Beschreibung der Aktion für das Logging."""
         key_to_delete = self.params.get("key", "UNBEKANNTER_KEY")
         return f"Batch: Key '{key_to_delete}' entfernen"
 
     def execute_on_file_logic(self, post, file_path: str) -> tuple[bool, str]:
+        """Entfernt den Key aus dem Frontmatter."""
         key_to_delete = self.params.get("key")
         base_name = os.path.basename(file_path)
 

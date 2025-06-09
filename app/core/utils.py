@@ -1,3 +1,8 @@
+"""
+Hilfsfunktionen und Utilities für das Frontmatter Tool.
+Beinhaltet value_matches und Dateityp-Prüfung.
+"""
+
 SUPPORTED_EXTENSIONS = ["*.md", "*.txt", "*.html", "*.yaml", "*.yml"]
 
 

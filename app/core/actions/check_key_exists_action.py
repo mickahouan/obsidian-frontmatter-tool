@@ -1,4 +1,7 @@
-# frontmatter_tool_project/app/core/actions/check_key_exists_action.py
+"""
+Aktion: Prüft, ob ein bestimmter Key im Frontmatter existiert.
+"""
+
 import os
 
 from .base_action import BaseAction
@@ -6,10 +9,12 @@ from .base_action import BaseAction
 
 class CheckKeyExistsAction(BaseAction):
     def get_description(self) -> str:
+        """Beschreibung der Aktion für das Logging."""
         key_to_check = self.params.get("key", "UNBEKANNTER_KEY")
         return f"Batch: Prüfen, ob Key '{key_to_check}' existiert"
 
     def execute_on_file_logic(self, post, file_path: str) -> tuple[bool, str]:
+        """Prüft, ob der Key im Frontmatter vorhanden ist."""
         key_to_check = self.params.get("key")
         base_name = os.path.basename(file_path)
 

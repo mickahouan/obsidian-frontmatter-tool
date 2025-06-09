@@ -1,3 +1,8 @@
+"""
+Datei-Explorer-Komponente für das Frontmatter Tool.
+Bietet eine Baumansicht für das Dateisystem und Kontextmenü für Einzeldatei-Aktionen.
+"""
+
 import os
 from typing import TYPE_CHECKING
 
@@ -13,6 +18,9 @@ if TYPE_CHECKING:
 
 class FileExplorer(QTreeView):
     def __init__(self, parent_window: "FrontmatterTool"):
+        """
+        Initialisiert den Datei-Explorer.
+        """
         super().__init__(parent_window)
         from PySide6.QtWidgets import QSizePolicy
 
@@ -43,6 +51,9 @@ class FileExplorer(QTreeView):
                 )
 
     def set_root_directory(self, dir_path: str):
+        """
+        Setzt das Wurzelverzeichnis für den Explorer.
+        """
         if dir_path and os.path.isdir(dir_path):
             self.file_model.setRootPath(dir_path)
             self.setRootIndex(self.file_model.index(dir_path))
@@ -65,6 +76,9 @@ class FileExplorer(QTreeView):
                 )
 
     def _on_selection_changed(self, selected, deselected):
+        """
+        Reagiert auf Änderungen der Dateiauswahl und informiert das Hauptfenster.
+        """
         if self.parent_window and hasattr(
             self.parent_window, "on_file_selected_from_explorer"
         ):
@@ -78,6 +92,9 @@ class FileExplorer(QTreeView):
             self.parent_window.on_file_selected_from_explorer(file_path, is_dir)
 
     def _show_context_menu(self, position):
+        """
+        Zeigt das Kontextmenü für Einzeldatei-Aktionen an.
+        """
         indexes = self.selectedIndexes()
         if not indexes:
             return

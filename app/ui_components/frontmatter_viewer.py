@@ -1,3 +1,8 @@
+"""
+Einfacher Frontmatter-Viewer (readonly) für das Frontmatter Tool.
+Zeigt das YAML-Frontmatter einer Datei als Text an.
+"""
+
 import os
 
 import frontmatter
@@ -9,6 +14,9 @@ from ..core.utils import is_supported_file
 
 class FrontmatterViewer(QTextEdit):
     def __init__(self, parent=None):
+        """
+        Initialisiert den Frontmatter-Viewer.
+        """
         super().__init__(parent)
         self.setReadOnly(True)
 
@@ -67,5 +75,7 @@ class FrontmatterViewer(QTextEdit):
                 logger_func(f"FEHLER beim Laden des Frontmatters für {file_path}: {e}")
 
     def clear_viewer(self):
-        """Löscht den Inhalt des Viewers."""
+        """
+        Löscht den Inhalt des Viewers.
+        """
         self.clear()

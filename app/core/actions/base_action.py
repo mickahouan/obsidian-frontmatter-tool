@@ -1,3 +1,8 @@
+"""
+Basis-Klasse für alle Aktionen im Frontmatter Tool.
+Definiert das Interface für Batch- und Einzelaktionen.
+"""
+
 import os
 from abc import ABC, abstractmethod
 
@@ -28,20 +33,15 @@ class BaseAction(ABC):
 
     @abstractmethod
     def execute_on_file_logic(self, post, file_path: str) -> tuple[bool, str]:
-        """
-        Führt die spezifische Logik der Aktion für eine einzelne Datei aus.
-        Diese Methode wird von _process_file aufgerufen, nachdem Vorbedingungen geprüft wurden.
-
-        :param post: Das geladene frontmatter.Post Objekt.
-        :param file_path: Der Pfad zur Datei.
-        :return: Tuple (bool: ob eine Änderung vorgenommen/simuliert wurde,
-        str: eine spezifische Nachricht für diese Datei oder leerer String).
-        """
+        """Implementiert die eigentliche Logik für eine Datei. Muss von Subklassen überschrieben werden."""
         pass
 
     def _save_changes(
         self, post, file_path: str, action_description_for_log: str
     ) -> bool:
+        """
+        Speichert Änderungen am Post-Objekt in die Datei, sofern kein Dry-Run.
+        """
         if self.is_dry_run:
             self.logger(
                 f"[DryRun] {action_description_for_log} würde in '{os.path.basename(file_path)}' gespeichert."

@@ -1,3 +1,7 @@
+"""
+Aktion: Prüft, ob ein Key einen bestimmten Wert hat.
+"""
+
 import os
 
 from .base_action import BaseAction
@@ -5,11 +9,13 @@ from .base_action import BaseAction
 
 class CheckKeyValueMatchAction(BaseAction):
     def get_description(self) -> str:
+        """Beschreibung der Aktion für das Logging."""
         key = self.params.get("key", "UNBEKANNTER_KEY")
         value = self.params.get("value", "UNBEKANNTER_WERT")
         return f"Batch: Prüfen, ob Key '{key}' den Wert '{value}' hat"
 
     def execute_on_file_logic(self, post, file_path: str) -> tuple[bool, str]:
+        """Prüft, ob der Key den gewünschten Wert hat."""
         key_to_check = self.params.get("key")
         value_to_match = self.params.get("value")
         base_name = os.path.basename(file_path)

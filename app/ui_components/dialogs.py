@@ -1,4 +1,8 @@
-# frontmatter_tool_project/app/ui_components/dialogs.py
+"""
+Dialoge für Einzeldatei-Aktionen im Frontmatter Tool.
+Beinhaltet KeyValueDialog, KeyDialog und RenameKeyDialog.
+"""
+
 from PySide6.QtWidgets import (
     QDialog,
     QDialogButtonBox,
@@ -19,6 +23,9 @@ class KeyValueDialog(QDialog):
         initial_key="",
         initial_value="",
     ):
+        """
+        Dialog zur Eingabe eines Key/Value-Paares.
+        """
         super().__init__(parent)
         self.setWindowTitle(window_title)
         self.setMinimumWidth(350)
@@ -51,7 +58,9 @@ class KeyValueDialog(QDialog):
             self.setStyleSheet(parent.styleSheet())
 
     def get_values(self) -> tuple[str, str] | None:
-        """Gibt die eingegebenen Werte zurück, wenn der Dialog akzeptiert wurde."""
+        """
+        Gibt das eingegebene Key/Value-Paar zurück.
+        """
         if self.result() == QDialog.DialogCode.Accepted:
             return self.key_input.text().strip(), self.value_input.text().strip()
         return None
@@ -61,6 +70,9 @@ class KeyDialog(QDialog):
     def __init__(
         self, parent=None, window_title="Eingabe", key_label="Key:", initial_key=""
     ):
+        """
+        Dialog zur Eingabe eines Keys.
+        """
         super().__init__(parent)
         self.setWindowTitle(window_title)
         self.setMinimumWidth(300)
@@ -86,6 +98,9 @@ class KeyDialog(QDialog):
             self.setStyleSheet(parent.styleSheet())
 
     def get_key(self) -> str | None:
+        """
+        Gibt den eingegebenen Key zurück.
+        """
         if self.result() == QDialog.DialogCode.Accepted:
             return self.key_input.text().strip()
         return None
@@ -101,6 +116,9 @@ class RenameKeyDialog(QDialog):
         initial_old_key="",
         initial_new_key="",
     ):
+        """
+        Dialog zur Eingabe von altem und neuem Key.
+        """
         super().__init__(parent)
         self.setWindowTitle(window_title)
         self.setMinimumWidth(350)
@@ -133,6 +151,9 @@ class RenameKeyDialog(QDialog):
             self.setStyleSheet(parent.styleSheet())
 
     def get_keys(self) -> tuple[str, str] | None:
+        """
+        Gibt das eingegebene Key-Paar (alt, neu) zurück.
+        """
         if self.result() == QDialog.DialogCode.Accepted:
             return self.old_key_input.text().strip(), self.new_key_input.text().strip()
         return None

@@ -1,4 +1,7 @@
-# frontmatter_tool_project/app/core/actions/rename_key_action.py
+"""
+Aktion: Bennent einen Key im Frontmatter um.
+"""
+
 import os
 
 from .base_action import BaseAction
@@ -6,11 +9,13 @@ from .base_action import BaseAction
 
 class RenameKeyAction(BaseAction):
     def get_description(self) -> str:
+        """Beschreibung der Aktion für das Logging."""
         old_key = self.params.get("old_key", "UNBEKANNTER_ALTER_KEY")
         new_key = self.params.get("new_key", "UNBEKANNTER_NEUER_KEY")
         return f"Batch: Key '{old_key}' zu '{new_key}' umbenennen"
 
     def execute_on_file_logic(self, post, file_path: str) -> tuple[bool, str]:
+        """Bennent den Key im Frontmatter um."""
         old_key_name = self.params.get("old_key")
         new_key_name = self.params.get("new_key")
         base_name = os.path.basename(file_path)

@@ -1,3 +1,8 @@
+"""
+Hauptfenster und zentrale Logik für das Frontmatter Tool.
+Bietet eine grafische Oberfläche zur Massenbearbeitung von YAML-Frontmatter in Markdown-Dateien.
+"""
+
 import os
 
 import frontmatter
@@ -39,7 +44,15 @@ from .ui_components.frontmatter_table_viewer import FrontmatterTableViewer
 
 
 class FrontmatterTool(QMainWindow):
+    """
+    Hauptklasse für das Frontmatter Tool.
+    Stellt die Benutzeroberfläche bereit und implementiert die zentrale Logik für die Bearbeitung von Frontmatter in Markdown-Dateien.
+    """
+
     def __init__(self):
+        """
+        Initialisiert das Hauptfenster und die UI-Komponenten.
+        """
         super().__init__()
         self.setWindowTitle("Frontmatter Tool (PySide6 - Modular v4)")
         self.setGeometry(100, 100, 950, 750)
@@ -49,6 +62,9 @@ class FrontmatterTool(QMainWindow):
         self.setStyleSheet(get_cyberpunk_stylesheet())
 
     def init_ui(self):
+        """
+        Erstellt und arrangiert alle UI-Elemente des Hauptfensters.
+        """
         main_widget = QWidget()
         self.setCentralWidget(main_widget)
         top_level_layout = QVBoxLayout(main_widget)
@@ -177,36 +193,44 @@ class FrontmatterTool(QMainWindow):
         right_panel_layout.addLayout(batch_row2)
 
         def show_newkey_field(show: bool):
+            """Zeigt oder versteckt das Eingabefeld für den neuen Key (bei Umbenennen)."""
             self.newkey_label.setVisible(show)
             self.newkey_input.setVisible(show)
 
         show_newkey_field(False)
 
         def batch_write_clicked():
+            """Handler für Batch: Key/Value schreiben."""
             show_newkey_field(False)
             self.write_key_value()
 
         def batch_remove_clicked():
+            """Handler für Batch: Key löschen."""
             show_newkey_field(False)
             self.remove_key()
 
         def batch_rename_clicked():
+            """Handler für Batch: Key umbenennen."""
             show_newkey_field(True)
             self.rename_key()
 
         def batch_check_exists_clicked():
+            """Handler für Batch: Key prüfen."""
             show_newkey_field(False)
             self.check_key_exists()
 
         def batch_check_missing_clicked():
+            """Handler für Batch: Key fehlt prüfen."""
             show_newkey_field(False)
             self.check_key_missing()
 
         def batch_check_value_clicked():
+            """Handler für Batch: Key/Value prüfen."""
             show_newkey_field(False)
             self.check_key_value_match()
 
         def batch_delete_files_clicked():
+            """Handler für Batch: Dateien löschen (K/V)."""
             show_newkey_field(False)
             self.delete_files_by_key_value()
 
@@ -234,6 +258,10 @@ class FrontmatterTool(QMainWindow):
         top_level_layout.addLayout(log_row)
 
     def on_file_selected_from_explorer(self, file_path: str | None, is_dir: bool):
+        """
+        Wird aufgerufen, wenn eine Datei oder ein Ordner im Datei-Explorer ausgewählt wird.
+        Zeigt das Frontmatter an oder gibt eine Logmeldung aus.
+        """
         if file_path and not is_dir and is_supported_file(file_path):
             self.display_frontmatter_table(file_path)
         else:
@@ -248,6 +276,9 @@ class FrontmatterTool(QMainWindow):
                 self.log_message("Auswahl im Datei-Explorer aufgehoben.")
 
     def display_frontmatter_table(self, file_path: str):
+        """
+        Zeigt das Frontmatter einer Datei in der Tabelle und im Raw-View an.
+        """
         import re
 
         import frontmatter
@@ -302,7 +333,9 @@ class FrontmatterTool(QMainWindow):
             )
 
     def _extract_frontmatter_block(self, raw: str) -> str:
-        """Extrahiert den ersten --- ... --- Block (YAML Frontmatter) aus dem Text."""
+        """
+        Extrahiert den ersten --- ... --- Block (YAML Frontmatter) aus dem Text.
+        """
         import re
 
         m = re.search(r"^---\s*\n(.*?\n)---", raw, re.DOTALL | re.MULTILINE)
@@ -311,6 +344,9 @@ class FrontmatterTool(QMainWindow):
         return ""
 
     def save_frontmatter_table(self):
+        """
+        Speichert die Änderungen aus der Frontmatter-Tabelle zurück in die Datei.
+        """
         import ast
 
         import frontmatter
@@ -362,6 +398,9 @@ class FrontmatterTool(QMainWindow):
             )
 
     def select_directory(self):
+        """
+        Öffnet einen Dialog zur Auswahl des Arbeitsverzeichnisses.
+        """
         dir_path = QFileDialog.getExistingDirectory(
             self, "Arbeitsverzeichnis auswählen", self.directory or QDir.homePath()
         )
@@ -400,9 +439,15 @@ class FrontmatterTool(QMainWindow):
         QApplication.processEvents()
 
     def clear_log(self):
+        """
+        Löscht das Protokoll.
+        """
         self.log_text.clear()
 
     def handle_single_file_delete(self, file_path: str):
+        """
+        Löscht eine einzelne Datei nach Bestätigung (oder im DryRun-Modus nur simuliert).
+        """
         if not (file_path and os.path.isfile(file_path)):
             self.log_message(
                 f"Fehler: Datei '{file_path}' nicht gefunden für Löschaktion.",
@@ -441,6 +486,9 @@ class FrontmatterTool(QMainWindow):
             )
 
     def handle_single_file_write_kv(self, file_path: str):
+        """
+        Öffnet einen Dialog zum Schreiben eines Key/Value-Paares in eine einzelne Datei.
+        """
         if not (
             file_path and os.path.isfile(file_path) and is_supported_file(file_path)
         ):
@@ -553,6 +601,9 @@ class FrontmatterTool(QMainWindow):
             )
 
     def handle_single_file_remove_key(self, file_path: str):
+        """
+        Öffnet einen Dialog zum Entfernen eines Keys aus einer einzelnen Datei.
+        """
         if not (
             file_path and os.path.isfile(file_path) and is_supported_file(file_path)
         ):
@@ -629,6 +680,9 @@ class FrontmatterTool(QMainWindow):
             )
 
     def set_directory_from_tree(self, dir_path: str):
+        """
+        Setzt das Arbeitsverzeichnis über die TreeView-Auswahl.
+        """
         if os.path.isdir(dir_path):
             self.directory = dir_path
             self.dir_label.setText(dir_path)
@@ -639,6 +693,9 @@ class FrontmatterTool(QMainWindow):
             self.frontmatter_display.clear_viewer()
 
     def get_files(self):
+        """
+        Gibt eine Liste aller unterstützten Dateien im aktuellen Arbeitsverzeichnis zurück.
+        """
         if not self.directory:
             self.log_message("BATCH: Kein Arbeitsverzeichnis ausgewählt!")
             return []
@@ -650,6 +707,9 @@ class FrontmatterTool(QMainWindow):
         return file_list
 
     def _iterate_files_with_action(self, action_instance: BaseAction):
+        """
+        Führt eine Batch-Aktion auf allen passenden Dateien im Arbeitsverzeichnis aus.
+        """
         effective_action_name = action_instance.get_description()
         files_to_process = self.get_files()
         if not files_to_process:
@@ -706,6 +766,9 @@ class FrontmatterTool(QMainWindow):
         )
 
     def remove_key(self):
+        """
+        Batch-Handler: Entfernt einen Key aus allen passenden Dateien.
+        """
         key_to_delete = self.key_input.text().strip()
         if not key_to_delete:
             QMessageBox.warning(
@@ -721,6 +784,9 @@ class FrontmatterTool(QMainWindow):
         self._iterate_files_with_action(action_instance=action)
 
     def write_key_value(self):
+        """
+        Batch-Handler: Schreibt ein Key/Value-Paar in alle passenden Dateien.
+        """
         key_to_write = self.key_input.text().strip()
         value_to_write = self.value_input.text().strip()
 
@@ -741,6 +807,9 @@ class FrontmatterTool(QMainWindow):
         self._iterate_files_with_action(action_instance=action)
 
     def rename_key(self):
+        """
+        Batch-Handler: Bennent einen Key in allen passenden Dateien um.
+        """
         old_key_name = self.key_input.text().strip()
         new_key_name = self.newkey_input.text().strip()
 
@@ -782,6 +851,9 @@ class FrontmatterTool(QMainWindow):
         self._iterate_files_with_action(action_instance=action_instance)
 
     def delete_files_by_key_value(self):
+        """
+        Batch-Handler: Löscht alle Dateien, die ein bestimmtes Key/Value-Paar enthalten.
+        """
         key_to_match = self.key_input.text().strip()
         value_to_match = self.value_input.text().strip()
         is_dry_run = self.dryrun_checkbox.isChecked()
@@ -820,6 +892,9 @@ class FrontmatterTool(QMainWindow):
         self._iterate_files_with_action(action_instance=action_instance)
 
     def check_key_exists(self):
+        """
+        Batch-Handler: Prüft, ob ein Key in den Dateien existiert.
+        """
         key_to_check = self.key_input.text().strip()
         if not key_to_check:
             QMessageBox.warning(
@@ -837,6 +912,9 @@ class FrontmatterTool(QMainWindow):
         self._iterate_files_with_action(action_instance=action_instance)
 
     def check_key_missing(self):
+        """
+        Batch-Handler: Prüft, ob ein Key in den Dateien fehlt.
+        """
         key_to_check = self.key_input.text().strip()
         if not key_to_check:
             QMessageBox.warning(
@@ -856,6 +934,9 @@ class FrontmatterTool(QMainWindow):
         self._iterate_files_with_action(action_instance=action_instance)
 
     def check_key_value_match(self):
+        """
+        Batch-Handler: Prüft, ob ein Key einen bestimmten Wert hat.
+        """
         key_to_check = self.key_input.text().strip()
         value_to_match = self.value_input.text().strip()
 
@@ -885,6 +966,9 @@ class FrontmatterTool(QMainWindow):
         self._iterate_files_with_action(action_instance=action_instance)
 
     def _placeholder_batch_operation(self, action_name):
+        """
+        Platzhalter für noch nicht umgestellte Batch-Operationen.
+        """
         QMessageBox.information(
             self,
             "Noch nicht implementiert",
@@ -895,6 +979,9 @@ class FrontmatterTool(QMainWindow):
         )
 
     def handle_single_file_rename_key(self, file_path: str):
+        """
+        Öffnet einen Dialog zum Umbenennen eines Keys in einer einzelnen Datei.
+        """
         if not (
             file_path and os.path.isfile(file_path) and is_supported_file(file_path)
         ):

@@ -1,3 +1,5 @@
-# app/__init__.py
+"""
+Initialisiert das app-Paket für das Frontmatter Tool.
+"""
 
 # Diese Datei initialisiert das app-Paket.

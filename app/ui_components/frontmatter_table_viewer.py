@@ -1,4 +1,8 @@
-# frontmatter_tool_project/app/ui_components/frontmatter_table_viewer.py
+"""
+Tabellenbasierter Frontmatter-Viewer für das Frontmatter Tool.
+Erlaubt die Anzeige und Bearbeitung von Frontmatter als Tabelle.
+"""
+
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QAbstractItemView,
@@ -19,6 +23,9 @@ FRONTMATTER_TYPES = [
 
 class FrontmatterTableViewer(QTableWidget):
     def __init__(self, parent=None):
+        """
+        Initialisiert den Tabellen-Viewer für Frontmatter.
+        """
         super().__init__(parent)
         self.setColumnCount(3)
         self.setHorizontalHeaderLabels(["Typ", "Key", "Value"])
@@ -39,6 +46,7 @@ class FrontmatterTableViewer(QTableWidget):
 
     def display_frontmatter(self, metadata: dict):
         """
+        Zeigt das Frontmatter als Tabelle an.
         Erwartet ein Dict wie {key: value} oder {key: (value, typ)}
         """
         self.setRowCount(0)
@@ -65,6 +73,9 @@ class FrontmatterTableViewer(QTableWidget):
             self.setItem(row, 2, value_item)
 
     def get_metadata(self) -> dict:
+        """
+        Gibt die aktuellen Metadaten aus der Tabelle zurück.
+        """
         data = {}
         for row in range(self.rowCount()):
             type_widget = self.cellWidget(row, 0)
@@ -75,4 +86,7 @@ class FrontmatterTableViewer(QTableWidget):
         return data
 
     def clear_viewer(self):
+        """
+        Löscht die Tabelle.
+        """
         self.setRowCount(0)

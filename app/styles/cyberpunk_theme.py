@@ -1,4 +1,7 @@
-# frontmatter_tool_project/app/styles/cyberpunk_theme.py
+"""
+Cyberpunk-Stylesheet für das Frontmatter Tool.
+Stellt das Design für die Anwendung bereit.
+"""
 
 
 def get_cyberpunk_stylesheet() -> str:
