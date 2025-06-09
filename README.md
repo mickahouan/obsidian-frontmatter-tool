@@ -2,6 +2,8 @@
 
 Ein leistungsstarkes, modulares Desktop-Tool (PySide6) zur komfortablen Bearbeitung, Analyse und Batch-Verwaltung von YAML-Frontmatter in Markdown-Dateien – inspiriert von Obsidian, aber unabhängig nutzbar.
 
+![Screenshot](image.png)
+
 ## Features
 
 - **Datei-Explorer** mit Kontextmenü für Einzeldatei-Aktionen (Key/Value schreiben, Key löschen, Key umbenennen, Datei löschen)
