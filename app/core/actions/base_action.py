@@ -1,10 +1,13 @@
 import os
-# frontmatter_tool_project/app/core/actions/base_action.py
 from abc import ABC, abstractmethod
-import frontmatter # Für frontmatter.dump in _save_changes
+
+import frontmatter
+
 
 class BaseAction(ABC):
-    def __init__(self, logger_func, params=None, dry_run=False, precondition_logic=None):
+    def __init__(
+        self, logger_func, params=None, dry_run=False, precondition_logic=None
+    ):
         """
         Initialisiert die Basisaktion.
         :param logger_func: Eine Funktion zum Loggen von Nachrichten.
@@ -36,7 +39,6 @@ class BaseAction(ABC):
         """
         pass
 
-    # In BaseAction._save_changes
     def _save_changes(
         self, post, file_path: str, action_description_for_log: str
     ) -> bool:
@@ -47,13 +49,8 @@ class BaseAction(ABC):
             return True
 
         try:
-            # ÄNDERUNG: Datei im Binärschreibmodus öffnen ('wb')
-            with open(file_path, "wb") as f_out:  # 'wb' statt 'w'
-                # frontmatter.dump wird jetzt die Bytes direkt schreiben können,
-                # da es intern .encode() aufruft.
-                frontmatter.dump(
-                    post, f_out, encoding="utf-8"
-                )  # encoding hier übergeben ist gut
+            with open(file_path, "wb") as f_out:
+                frontmatter.dump(post, f_out, encoding="utf-8")
             self.logger(
                 f"GESPEICHERT: Änderungen nach '{action_description_for_log}' in '{os.path.basename(file_path)}'."
             )
@@ -69,16 +66,8 @@ class BaseAction(ABC):
         Verarbeitet eine einzelne Datei. Prüft Vorbedingungen und ruft execute_on_file_logic auf.
         Diese Methode wird von der Hauptschleife in main_window aufgerufen.
         """
-        # Vorbedingung prüfen, falls eine Logik dafür übergeben wurde
         if self.precondition_logic:
-            if not self.precondition_logic(post, self.params): # params könnte hier auch die globalen Params sein
+            if not self.precondition_logic(post, self.params):
                 base_name = os.path.basename(file_path)
-                # Loggen, dass die Vorbedingung nicht erfüllt war, erfolgt idealerweise in der Hauptschleife,
-                # die den Rückgabewert von precondition_logic direkt prüft.
-                # Hier geben wir einfach zurück, dass nichts gemacht wurde.
                 return False, f"Vorbedingung nicht erfüllt für {base_name}"
-
-        # Eigentliche Aktionslogik ausführen
         return self.execute_on_file_logic(post, file_path)
-
-# Importiere os für basename in _save_changes

@@ -1,4 +1,3 @@
-# frontmatter_tool_project/app/core/actions/check_key_value_match_action.py
 import os
 
 from .base_action import BaseAction
@@ -15,12 +14,12 @@ class CheckKeyValueMatchAction(BaseAction):
         value_to_match = self.params.get("value")
         base_name = os.path.basename(file_path)
 
-        if not key_to_check:  # Value kann hier optional sein, je nach Definition, aber für "Match" brauchen wir ihn
+        if not key_to_check:
             self.logger(
                 f"FEHLER (CheckKeyValueMatchAction): Key nicht spezifiziert für {base_name}."
             )
             return False, "Key nicht spezifiziert"
-        if value_to_match is None:  # Für einen Match brauchen wir einen Wert
+        if value_to_match is None:
             self.logger(
                 f"FEHLER (CheckKeyValueMatchAction): Value nicht spezifiziert für {base_name}."
             )

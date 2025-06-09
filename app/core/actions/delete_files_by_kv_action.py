@@ -21,7 +21,6 @@ class DeleteFilesByKeyValueAction(BaseAction):
             )
             return False, "Key oder Value nicht spezifiziert"
 
-        # Prüfen, ob der Key existiert und den gewünschten Wert hat
         if key_to_match in post.metadata and str(post.metadata[key_to_match]) == str(
             value_to_match
         ):
@@ -62,7 +61,3 @@ class DeleteFilesByKeyValueAction(BaseAction):
                 False,
                 f"Key '{key_to_match}' hat Wert '{actual_value}', nicht '{value_to_match}'. Keine Löschung.",
             )
-
-    # Diese Aktion verwendet _save_changes nicht, da sie die Datei direkt löscht.
-    # Die process_file Methode der BaseAction wird aber weiterhin verwendet,
-    # um ggf. Vorbedingungen zu prüfen, bevor execute_on_file_logic aufgerufen wird.

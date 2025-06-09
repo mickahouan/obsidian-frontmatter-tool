@@ -25,7 +25,6 @@ class KeyValueDialog(QDialog):
 
         self.main_layout = QVBoxLayout(self)
 
-        # Key Eingabe
         key_layout = QHBoxLayout()
         key_layout.addWidget(QLabel(key_label))
         self.key_input = QLineEdit(self)
@@ -33,7 +32,6 @@ class KeyValueDialog(QDialog):
         key_layout.addWidget(self.key_input)
         self.main_layout.addLayout(key_layout)
 
-        # Value Eingabe
         value_layout = QHBoxLayout()
         value_layout.addWidget(QLabel(value_label))
         self.value_input = QLineEdit(self)
@@ -41,26 +39,22 @@ class KeyValueDialog(QDialog):
         value_layout.addWidget(self.value_input)
         self.main_layout.addLayout(value_layout)
 
-        # Standard-Buttons (OK, Abbrechen)
         self.button_box = QDialogButtonBox(
             QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel,
             self,
         )
-        self.button_box.accepted.connect(self.accept)  # Verbindet OK mit self.accept()
-        self.button_box.rejected.connect(
-            self.reject
-        )  # Verbindet Abbrechen mit self.reject()
+        self.button_box.accepted.connect(self.accept)
+        self.button_box.rejected.connect(self.reject)
         self.main_layout.addWidget(self.button_box)
 
-        # Stylesheet des Parents übernehmen, falls vorhanden und gewünscht
         if parent and hasattr(parent, "styleSheet") and callable(parent.styleSheet):
-            self.setStyleSheet(parent.styleSheet())  # type: ignore
+            self.setStyleSheet(parent.styleSheet())
 
     def get_values(self) -> tuple[str, str] | None:
         """Gibt die eingegebenen Werte zurück, wenn der Dialog akzeptiert wurde."""
-        if self.result() == QDialog.DialogCode.Accepted:  # Prüfen, ob OK geklickt wurde
+        if self.result() == QDialog.DialogCode.Accepted:
             return self.key_input.text().strip(), self.value_input.text().strip()
-        return None  # Oder eine Exception werfen, je nach Präferenz
+        return None
 
 
 class KeyDialog(QDialog):
@@ -113,7 +107,6 @@ class RenameKeyDialog(QDialog):
 
         self.main_layout = QVBoxLayout(self)
 
-        # Alter Key
         old_key_layout = QHBoxLayout()
         old_key_layout.addWidget(QLabel(old_key_label))
         self.old_key_input = QLineEdit(self)
@@ -121,7 +114,6 @@ class RenameKeyDialog(QDialog):
         old_key_layout.addWidget(self.old_key_input)
         self.main_layout.addLayout(old_key_layout)
 
-        # Neuer Key
         new_key_layout = QHBoxLayout()
         new_key_layout.addWidget(QLabel(new_key_label))
         self.new_key_input = QLineEdit(self)
@@ -129,7 +121,6 @@ class RenameKeyDialog(QDialog):
         new_key_layout.addWidget(self.new_key_input)
         self.main_layout.addLayout(new_key_layout)
 
-        # Buttons
         self.button_box = QDialogButtonBox(
             QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel,
             self,

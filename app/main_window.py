@@ -55,7 +55,6 @@ class FrontmatterTool(QMainWindow):
         top_level_layout.setContentsMargins(8, 8, 8, 8)
         top_level_layout.setSpacing(6)
 
-        # Kompakte Verzeichnisauswahl oben
         dir_row = QHBoxLayout()
         dir_btn = QPushButton("Verzeichnis auswählen")
         dir_btn.clicked.connect(self.select_directory)
@@ -70,7 +69,6 @@ class FrontmatterTool(QMainWindow):
         self.tree_view.setMinimumWidth(180)
         main_splitter.addWidget(self.tree_view)
 
-        # Rechter Panelbereich
         right_panel_widget = QWidget()
         right_panel_layout = QVBoxLayout(right_panel_widget)
         right_panel_layout.setContentsMargins(0, 0, 0, 0)
@@ -82,25 +80,20 @@ class FrontmatterTool(QMainWindow):
         sp_right.setHorizontalStretch(2)
         right_panel_widget.setSizePolicy(sp_right)
 
-        # Splitter für Table-View und Raw-View
         fm_splitter = QSplitter(Qt.Orientation.Horizontal)
-        # Table-Viewer (editierbar)
         self.frontmatter_display = FrontmatterTableViewer(self)
         self.frontmatter_display.setMinimumHeight(120)
         fm_splitter.addWidget(self.frontmatter_display)
-        # Raw-Viewer (readonly)
         self.frontmatter_raw = QTextEdit(self)
         self.frontmatter_raw.setReadOnly(True)
         self.frontmatter_raw.setMinimumWidth(320)
         fm_splitter.addWidget(self.frontmatter_raw)
         fm_splitter.setSizes([500, 320])
         right_panel_layout.addWidget(fm_splitter, 1)
-        # Speichern-Button
         self.save_fm_btn = QPushButton("Frontmatter speichern")
         self.save_fm_btn.clicked.connect(self.save_frontmatter_table)
         right_panel_layout.addWidget(self.save_fm_btn)
 
-        # Kompakte Optionen (früher, damit Checkbox existiert)
         options_row = QHBoxLayout()
         self.dryrun_checkbox = QCheckBox("Dry Run")
         self.dryrun_checkbox.setChecked(True)
@@ -111,12 +104,10 @@ class FrontmatterTool(QMainWindow):
         options_row.addStretch()
         right_panel_layout.addLayout(options_row)
 
-        # Option für value_matches: "Alle Elemente müssen matchen"
         self.match_all_checkbox = QCheckBox("Alle Elemente müssen matchen")
         self.match_all_checkbox.setChecked(False)
         options_row.addWidget(self.match_all_checkbox)
 
-        # Kompakte Parameter- und Vorbedingungszeile (jetzt nach Checkbox-Init)
         param_row = QHBoxLayout()
         self.key_label = QLabel("Key:")
         self.key_input = QLineEdit()
@@ -143,10 +134,8 @@ class FrontmatterTool(QMainWindow):
         param_row.addWidget(self.precondition_value_input)
         right_panel_layout.addLayout(param_row)
 
-        # Standard: Neuer Key und Label ausblenden
         self.newkey_label.setVisible(False)
         self.newkey_input.setVisible(False)
-        # Standard: Vorbedingung ausblenden, wenn Checkbox nicht aktiv
         self.precond_label.setVisible(self.only_if_key_value_checkbox.isChecked())
         self.precondition_key_input.setVisible(
             self.only_if_key_value_checkbox.isChecked()
@@ -168,7 +157,6 @@ class FrontmatterTool(QMainWindow):
         )
         update_precond_fields_enabled_state()
 
-        # Kompakte Batch-Aktionsleiste
         batch_row1 = QHBoxLayout()
         btn_batch_write = QPushButton("Batch: Key/Value schreiben")
         btn_batch_remove = QPushButton("Batch: Key löschen")
@@ -188,15 +176,12 @@ class FrontmatterTool(QMainWindow):
         batch_row2.addWidget(btn_batch_delete_files)
         right_panel_layout.addLayout(batch_row2)
 
-        # --- Dynamik für "Neuer Key"-Feld ---
         def show_newkey_field(show: bool):
             self.newkey_label.setVisible(show)
             self.newkey_input.setVisible(show)
 
-        # Standard: ausblenden
         show_newkey_field(False)
 
-        # Button-Handler für dynamisches Anzeigen
         def batch_write_clicked():
             show_newkey_field(False)
             self.write_key_value()
@@ -237,7 +222,6 @@ class FrontmatterTool(QMainWindow):
         main_splitter.setSizes([200, 550])
         top_level_layout.addWidget(main_splitter, 1)
 
-        # Protokollbereich unten
         log_row = QHBoxLayout()
         self.log_text = QTextEdit()
         self.log_text.setMinimumHeight(80)
@@ -274,7 +258,6 @@ class FrontmatterTool(QMainWindow):
             with open(file_path, "r", encoding="utf-8") as f:
                 raw = f.read()
                 post = frontmatter.loads(raw)
-            # Raw-Ansicht aktualisieren (zeigt den YAML-Block wie in Obsidian)
             fm_block = self._extract_frontmatter_block(raw)
             self.frontmatter_raw.setPlainText(fm_block)
             if not post.metadata:
@@ -287,7 +270,6 @@ class FrontmatterTool(QMainWindow):
                 return
             meta = {}
             for k, v in post.metadata.items():
-                # Typ-Erkennung
                 if isinstance(v, list):
                     typ = "Liste"
                 elif isinstance(v, bool):
@@ -295,7 +277,6 @@ class FrontmatterTool(QMainWindow):
                 elif isinstance(v, int) or (isinstance(v, str) and v.isdigit()):
                     typ = "Zahl"
                 elif isinstance(v, str):
-                    # Datum/Uhrzeit grob erkennen
                     if re.match(r"^\d{4}-\d{2}-\d{2}$", v):
                         typ = "Datum"
                     elif re.match(r"^\d{4}-\d{2}-\d{2} \d{2}:\d{2}", v):
@@ -342,16 +323,13 @@ class FrontmatterTool(QMainWindow):
         new_meta = {}
         for k, (v, typ) in meta.items():
             if typ == "Liste":
-                # Versuche, Python- oder YAML-Liste zu parsen
                 try:
-                    # Versuche Python-Literal (z.B. ['foo', 'bar'])
                     parsed = ast.literal_eval(v)
                     if isinstance(parsed, list):
                         new_meta[k] = parsed
                     else:
                         new_meta[k] = [str(parsed)]
                 except Exception:
-                    # Fallback: Kommagetrennt splitten
                     if "," in v:
                         new_meta[k] = [s.strip() for s in v.split(",") if s.strip()]
                     else:
@@ -377,7 +355,6 @@ class FrontmatterTool(QMainWindow):
                 f"Frontmatter gespeichert für {os.path.basename(file_path)}.",
                 level="success",
             )
-            # Nach dem Speichern Raw-Ansicht aktualisieren
             self.display_frontmatter_table(file_path)
         except Exception as e:
             self.log_message(
@@ -463,8 +440,6 @@ class FrontmatterTool(QMainWindow):
                 f"Einzel: Löschen der Datei '{base_name}' abgebrochen.", level="warn"
             )
 
-    # Innerhalb der Klasse FrontmatterTool(QMainWindow) in app/main_window.py:
-
     def handle_single_file_write_kv(self, file_path: str):
         if not (
             file_path and os.path.isfile(file_path) and is_supported_file(file_path)
@@ -499,7 +474,6 @@ class FrontmatterTool(QMainWindow):
                     )
                     return
 
-                # Logik zur Umwandlung des rohen Dialogwerts in eine Liste oder Beibehaltung als String
                 final_value_to_write: object
                 if (
                     isinstance(raw_value_from_dialog, str)
