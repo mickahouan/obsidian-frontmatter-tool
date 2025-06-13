@@ -1,6 +1,7 @@
 # frontmatter_tool_project/main.py
 import sys
 
+from PySide6.QtCore import QCoreApplication, QTranslator
 from PySide6.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget
 
 from app.main_window import FrontmatterTool
@@ -18,15 +19,34 @@ def start_app():
         SystemExit: If the application is closed, sys.exit() is called to exit the program.
     """
     app = QApplication(sys.argv)
-    window = FrontmatterTool()
+    # Sprachwahl: 'de' für Deutsch, 'en' für Englisch
+    language = "en"  # <--- Hier Sprache ändern: 'de' oder 'en'
+    translator = QTranslator()
+    if language == "de":
+        translator.load("translations/de.qm")
+    elif language == "en":
+        translator.load("translations/en.qm")
+    app.installTranslator(translator)
+    window = FrontmatterTool(language=language, app_translator=translator)
     window.show()
     sys.exit(app.exec())
 
 
 def show_table_demo():
     app = QApplication(sys.argv)
+    language = "en"  # <--- Hier Sprache ändern: 'de' oder 'en'
+    translator = QTranslator()
+    if language == "de":
+        translator.load("translations_de.qm")
+    elif language == "en":
+        translator.load("translations_en.qm")
+    app.installTranslator(translator)
     win = QMainWindow()
-    win.setWindowTitle("Frontmatter TableViewer Demo")
+    win.setWindowTitle(
+        QCoreApplication.translate(
+            "FrontmatterTableViewer", "Frontmatter TableViewer Demo"
+        )
+    )
     central = QWidget()
     layout = QVBoxLayout(central)
     table = FrontmatterTableViewer()
@@ -49,4 +69,4 @@ def show_table_demo():
 
 if __name__ == "__main__":
     start_app()
-    # show_table_demo()
+    show_table_demo()

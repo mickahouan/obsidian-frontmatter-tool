@@ -3,6 +3,7 @@ Dialoge für Einzeldatei-Aktionen im Frontmatter Tool.
 Beinhaltet KeyValueDialog, KeyDialog und RenameKeyDialog.
 """
 
+from PySide6.QtCore import QCoreApplication
 from PySide6.QtWidgets import (
     QDialog,
     QDialogButtonBox,
@@ -17,9 +18,9 @@ class KeyValueDialog(QDialog):
     def __init__(
         self,
         parent=None,
-        window_title="Eingabe",
-        key_label="Key:",
-        value_label="Value:",
+        window_title=QCoreApplication.translate("KeyValueDialog", "Eingabe"),
+        key_label=QCoreApplication.translate("KeyValueDialog", "Key:"),
+        value_label=QCoreApplication.translate("KeyValueDialog", "Value:"),
         initial_key="",
         initial_value="",
     ):
@@ -68,7 +69,11 @@ class KeyValueDialog(QDialog):
 
 class KeyDialog(QDialog):
     def __init__(
-        self, parent=None, window_title="Eingabe", key_label="Key:", initial_key=""
+        self,
+        parent=None,
+        window_title=QCoreApplication.translate("KeyDialog", "Eingabe"),
+        key_label=QCoreApplication.translate("KeyDialog", "Key:"),
+        initial_key="",
     ):
         """
         Dialog zur Eingabe eines Keys.
@@ -110,9 +115,9 @@ class RenameKeyDialog(QDialog):
     def __init__(
         self,
         parent=None,
-        window_title="Key umbenennen",
-        old_key_label="Alter Key:",
-        new_key_label="Neuer Key:",
+        window_title=QCoreApplication.translate("RenameKeyDialog", "Key umbenennen"),
+        old_key_label=QCoreApplication.translate("RenameKeyDialog", "Alter Key:"),
+        new_key_label=QCoreApplication.translate("RenameKeyDialog", "Neuer Key:"),
         initial_old_key="",
         initial_new_key="",
     ):

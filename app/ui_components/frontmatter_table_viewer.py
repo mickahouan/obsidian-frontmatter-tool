@@ -3,7 +3,7 @@ Tabellenbasierter Frontmatter-Viewer für das Frontmatter Tool.
 Erlaubt die Anzeige und Bearbeitung von Frontmatter als Tabelle.
 """
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import QCoreApplication, Qt
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QComboBox,
@@ -12,12 +12,12 @@ from PySide6.QtWidgets import (
 )
 
 FRONTMATTER_TYPES = [
-    "Text",
-    "Liste",
-    "Zahl",
-    "Checkbox",
-    "Datum",
-    "Datum und Uhrzeit",
+    QCoreApplication.translate("FrontmatterTableViewer", "Text"),
+    QCoreApplication.translate("FrontmatterTableViewer", "Liste"),
+    QCoreApplication.translate("FrontmatterTableViewer", "Zahl"),
+    QCoreApplication.translate("FrontmatterTableViewer", "Checkbox"),
+    QCoreApplication.translate("FrontmatterTableViewer", "Datum"),
+    QCoreApplication.translate("FrontmatterTableViewer", "Datum und Uhrzeit"),
 ]
 
 
@@ -28,12 +28,19 @@ class FrontmatterTableViewer(QTableWidget):
         """
         super().__init__(parent)
         self.setColumnCount(3)
-        self.setHorizontalHeaderLabels(["Typ", "Key", "Value"])
-        self.setEditTriggers(
-            QAbstractItemView.DoubleClicked | QAbstractItemView.SelectedClicked
+        self.setHorizontalHeaderLabels(
+            [
+                QCoreApplication.translate("FrontmatterTableViewer", "Typ"),
+                QCoreApplication.translate("FrontmatterTableViewer", "Key"),
+                QCoreApplication.translate("FrontmatterTableViewer", "Value"),
+            ]
         )
-        self.setSelectionBehavior(QAbstractItemView.SelectRows)
-        self.setSelectionMode(QAbstractItemView.SingleSelection)
+        self.setEditTriggers(
+            QAbstractItemView.EditTrigger.DoubleClicked
+            | QAbstractItemView.EditTrigger.SelectedClicked
+        )
+        self.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
+        self.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
         self.verticalHeader().setVisible(False)
         self.setAlternatingRowColors(True)
         self.setShowGrid(True)
@@ -58,17 +65,22 @@ class FrontmatterTableViewer(QTableWidget):
             if isinstance(value, tuple) and len(value) == 2:
                 val, typ = value
             else:
-                val, typ = value, "Text"
+                val, typ = (
+                    value,
+                    QCoreApplication.translate("FrontmatterTableViewer", "Text"),
+                )
             type_combo = QComboBox()
             type_combo.addItems(FRONTMATTER_TYPES)
             if typ in FRONTMATTER_TYPES:
                 type_combo.setCurrentText(typ)
             else:
-                type_combo.setCurrentText("Text")
+                type_combo.setCurrentText(
+                    QCoreApplication.translate("FrontmatterTableViewer", "Text")
+                )
             self.setCellWidget(row, 0, type_combo)
             key_item = QTableWidgetItem(str(key))
             value_item = QTableWidgetItem(str(val))
-            value_item.setFlags(value_item.flags() | Qt.ItemIsEditable)
+            value_item.setFlags(value_item.flags() | Qt.ItemFlag.ItemIsEditable)
             self.setItem(row, 1, key_item)
             self.setItem(row, 2, value_item)
 
@@ -79,9 +91,15 @@ class FrontmatterTableViewer(QTableWidget):
         data = {}
         for row in range(self.rowCount()):
             type_widget = self.cellWidget(row, 0)
-            typ = type_widget.currentText() if type_widget else "Text"
-            key = self.item(row, 1).text() if self.item(row, 1) else ""
-            value = self.item(row, 2).text() if self.item(row, 2) else ""
+            typ = (
+                type_widget.currentText()
+                if isinstance(type_widget, QComboBox)
+                else QCoreApplication.translate("FrontmatterTableViewer", "Text")
+            )
+            key_item = self.item(row, 1)
+            key = key_item.text() if key_item is not None else ""
+            value_item = self.item(row, 2)
+            value = value_item.text() if value_item is not None else ""
             data[key] = (value, typ)
         return data
 

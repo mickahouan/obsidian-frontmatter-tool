@@ -7,6 +7,7 @@ import os
 
 import frontmatter
 import yaml
+from PySide6.QtCore import QCoreApplication
 from PySide6.QtWidgets import QTextEdit
 
 from ..core.utils import is_supported_file
@@ -43,7 +44,7 @@ class FrontmatterViewer(QTextEdit):
 
             if not post.metadata:
                 self.setText(
-                    f"# Kein Frontmatter in {os.path.basename(file_path)} gefunden."
+                    f"# {QCoreApplication.translate('FrontmatterViewer', 'Kein Frontmatter in')} {os.path.basename(file_path)} {QCoreApplication.translate('FrontmatterViewer', 'gefunden.')}"
                 )
                 if logger_func:
                     logger_func(
@@ -63,14 +64,14 @@ class FrontmatterViewer(QTextEdit):
                 logger_func(f"Frontmatter für {os.path.basename(file_path)} geladen.")
         except yaml.YAMLError as ye:
             self.setText(
-                f"# Fehler beim Formatieren des Frontmatters (YAML Error):\n{ye}"
+                f"# {QCoreApplication.translate('FrontmatterViewer', 'Fehler beim Formatieren des Frontmatters (YAML Error):')}\n{ye}"
             )
             if logger_func:
                 logger_func(
                     f"FEHLER beim Formatieren des Frontmatters für {file_path} (YAML Error): {ye}"
                 )
         except Exception as e:
-            self.setText(f"# Unbekannter Fehler beim Laden des Frontmatters:\n{e}")
+            self.setText(f"# {QCoreApplication.translate('FrontmatterViewer', 'Unbekannter Fehler beim Laden des Frontmatters:')}\n{e}")
             if logger_func:
                 logger_func(f"FEHLER beim Laden des Frontmatters für {file_path}: {e}")
 

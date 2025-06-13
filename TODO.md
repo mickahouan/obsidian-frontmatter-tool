@@ -75,6 +75,10 @@
 2. [ ] Asynchrone Ausführung (Threading)
 3. [ ] Regelbasiertes System / Workflow-Builder
 
+### Phase 4: Internationalisierung
+1. [X] Mehrsprachige Unterstützung (Deutsch, Englisch)
+
 ---
 
 *Stand: 09.06.2025 – Phase 2, Punkt 4/5/7/8 und Phase 3 sind als nächstes umzusetzen.*
+*Stand: 12.06.2025 – Phase 4 umgesetzt.*

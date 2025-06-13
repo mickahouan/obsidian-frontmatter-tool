@@ -6,7 +6,7 @@ Bietet eine Baumansicht für das Dateisystem und Kontextmenü für Einzeldatei-A
 import os
 from typing import TYPE_CHECKING
 
-from PySide6.QtCore import QDir, Qt
+from PySide6.QtCore import QCoreApplication, QDir, Qt
 from PySide6.QtGui import QAction
 from PySide6.QtWidgets import QFileSystemModel, QMenu, QTreeView
 
@@ -104,26 +104,26 @@ class FileExplorer(QTreeView):
         menu = QMenu(self)
         if self.parent_window:
             if not is_dir and is_supported_file(file_path):
-                write_kv_action = QAction("Einzel: Key/Value schreiben...", self)
+                write_kv_action = QAction(QCoreApplication.translate("FileExplorer", "Einzel: Key/Value schreiben..."), self)
                 write_kv_action.triggered.connect(
                     lambda checked=False,
                     fp=file_path: self.parent_window.handle_single_file_write_kv(fp)
                 )
                 menu.addAction(write_kv_action)
-                remove_key_action = QAction("Einzel: Key löschen...", self)
+                remove_key_action = QAction(QCoreApplication.translate("FileExplorer", "Einzel: Key löschen..."), self)
                 remove_key_action.triggered.connect(
                     lambda checked=False,
                     fp=file_path: self.parent_window.handle_single_file_remove_key(fp)
                 )
                 menu.addAction(remove_key_action)
-                rename_key_action = QAction("Einzel: Key umbenennen...", self)
+                rename_key_action = QAction(QCoreApplication.translate("FileExplorer", "Einzel: Key umbenennen..."), self)
                 rename_key_action.triggered.connect(
                     lambda checked=False,
                     fp=file_path: self.parent_window.handle_single_file_rename_key(fp)
                 )
                 menu.addAction(rename_key_action)
                 menu.addSeparator()
-                delete_file_action = QAction("Einzel: Datei löschen", self)
+                delete_file_action = QAction(QCoreApplication.translate("FileExplorer", "Einzel: Datei löschen"), self)
                 delete_file_action.triggered.connect(
                     lambda checked=False,
                     fp=file_path: self.parent_window.handle_single_file_delete(fp)
@@ -131,7 +131,7 @@ class FileExplorer(QTreeView):
                 menu.addAction(delete_file_action)
             elif is_dir:
                 open_folder_action = QAction(
-                    f"'{os.path.basename(file_path)}' als Arbeitsverzeichnis", self
+                    f"'{os.path.basename(file_path)}' {QCoreApplication.translate('FileExplorer', 'als Arbeitsverzeichnis')}", self
                 )
                 open_folder_action.triggered.connect(
                     lambda checked=False,
@@ -139,7 +139,7 @@ class FileExplorer(QTreeView):
                 )
                 menu.addAction(open_folder_action)
             else:
-                no_action = QAction("Keine Aktionen verfügbar", self)
+                no_action = QAction(QCoreApplication.translate("FileExplorer", "Keine Aktionen verfügbar"), self)
                 no_action.setEnabled(False)
                 menu.addAction(no_action)
             if not menu.isEmpty():

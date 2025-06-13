@@ -7,8 +7,9 @@ import os
 
 import frontmatter
 import yaml
-from PySide6.QtCore import QDir, Qt
+from PySide6.QtCore import QCoreApplication, QDir, Qt
 from PySide6.QtWidgets import (
+    # QAction,
     QApplication,
     QCheckBox,
     QDialog,
@@ -17,6 +18,7 @@ from PySide6.QtWidgets import (
     QLabel,
     QLineEdit,
     QMainWindow,
+    QMenu,
     QMessageBox,
     QPushButton,
     QSizePolicy,
@@ -49,17 +51,118 @@ class FrontmatterTool(QMainWindow):
     Stellt die Benutzeroberfläche bereit und implementiert die zentrale Logik für die Bearbeitung von Frontmatter in Markdown-Dateien.
     """
 
-    def __init__(self):
+    def __init__(self, language="en", app_translator=None):
         """
         Initialisiert das Hauptfenster und die UI-Komponenten.
         """
         super().__init__()
-        self.setWindowTitle("Frontmatter Tool (PySide6 - Modular v4)")
+        self.language = language
+        self.translator = app_translator
+        self.setWindowTitle(
+            QCoreApplication.translate(
+                "MainWindow", "Frontmatter Tool (PySide6 - Modular v4)"
+            )
+        )
         self.setGeometry(100, 100, 950, 750)
         self.directory = ""
 
         self.init_ui()
+        # self._init_menu()
         self.setStyleSheet(get_cyberpunk_stylesheet())
+
+    def _init_menu(self):
+        menubar = self.menuBar()
+        lang_menu = QMenu(QCoreApplication.translate("MainWindow", "Sprache"), self)
+        action_de = QAction("Deutsch", self)
+        action_en = QAction("English", self)
+        action_de.setCheckable(True)
+        action_en.setCheckable(True)
+        action_de.setChecked(self.language == "de")
+        action_en.setChecked(self.language == "en")
+        lang_menu.addAction(action_de)
+        lang_menu.addAction(action_en)
+        menubar.addMenu(lang_menu)
+
+        def set_lang_de():
+            self._change_language("de")
+
+        def set_lang_en():
+            self._change_language("en")
+
+        action_de.triggered.connect(set_lang_de)
+        action_en.triggered.connect(set_lang_en)
+        self._lang_actions = {"de": action_de, "en": action_en}
+
+    def _change_language(self, lang):
+        if lang == self.language:
+            return
+        from PySide6.QtCore import QCoreApplication, QTranslator
+
+        if self.translator is None:
+            self.translator = QTranslator()
+        if lang == "de":
+            self.translator.load("translations/de.qm")
+        else:
+            self.translator.load("translations/en.qm")
+        app = QCoreApplication.instance()
+        if app is not None:
+            app.installTranslator(self.translator)
+        self.language = lang
+        # Menü-Checkboxen aktualisieren
+        for lang_key, act in self._lang_actions.items():
+            act.setChecked(lang_key == lang)
+        # UI-Elemente neu übersetzen
+        self._retranslate_ui()
+
+    def _retranslate_ui(self):
+        # Übersetzt alle UI-Elemente neu (nur die wichtigsten)
+        self.setWindowTitle(
+            QCoreApplication.translate(
+                "MainWindow", "Frontmatter Tool (PySide6 - Modular v4)"
+            )
+        )
+        self.dir_label.setText(
+            QCoreApplication.translate("MainWindow", "Kein Verzeichnis ausgewählt")
+        )
+        self.save_fm_btn.setText(
+            QCoreApplication.translate("MainWindow", "Frontmatter speichern")
+        )
+        self.dryrun_checkbox.setText(
+            QCoreApplication.translate("MainWindow", "Dry Run")
+        )
+        self.only_if_key_value_checkbox.setText(
+            QCoreApplication.translate("MainWindow", "Vorbedingung anwenden")
+        )
+        self.match_all_checkbox.setText(
+            QCoreApplication.translate("MainWindow", "Alle Elemente müssen matchen")
+        )
+        self.key_label.setText(QCoreApplication.translate("MainWindow", "Key:"))
+        self.value_label.setText(QCoreApplication.translate("MainWindow", "Value:"))
+        self.newkey_label.setText(
+            QCoreApplication.translate("MainWindow", "Neuer Key:")
+        )
+        self.precond_label.setText(
+            QCoreApplication.translate("MainWindow", "Vorbedingung:")
+        )
+        self.key_input.setPlaceholderText(
+            QCoreApplication.translate("MainWindow", "Key/Alter Key")
+        )
+        self.value_input.setPlaceholderText(
+            QCoreApplication.translate("MainWindow", "Value (optional)")
+        )
+        self.newkey_input.setPlaceholderText(
+            QCoreApplication.translate("MainWindow", "Neuer Key (für Umbenennen)")
+        )
+        self.precondition_key_input.setPlaceholderText(
+            QCoreApplication.translate("MainWindow", "Vorbedingung Key")
+        )
+        self.precondition_value_input.setPlaceholderText(
+            QCoreApplication.translate("MainWindow", "Vorbedingung Value")
+        )
+        self.log_clear_btn.setText(
+            QCoreApplication.translate("MainWindow", "Protokoll löschen")
+        )
+        # Buttons in Batch-Operationen etc. können bei Bedarf ergänzt werden
 
     def init_ui(self):
         """
@@ -72,9 +175,13 @@ class FrontmatterTool(QMainWindow):
         top_level_layout.setSpacing(6)
 
         dir_row = QHBoxLayout()
-        dir_btn = QPushButton("Verzeichnis auswählen")
+        dir_btn = QPushButton(
+            QCoreApplication.translate("MainWindow", "Verzeichnis auswählen")
+        )
         dir_btn.clicked.connect(self.select_directory)
-        self.dir_label = QLabel("Kein Verzeichnis ausgewählt")
+        self.dir_label = QLabel(
+            QCoreApplication.translate("MainWindow", "Kein Verzeichnis ausgewählt")
+        )
         self.dir_label.setStyleSheet("font-style: italic;")
         dir_row.addWidget(dir_btn)
         dir_row.addWidget(self.dir_label, 1)
@@ -106,39 +213,61 @@ class FrontmatterTool(QMainWindow):
         fm_splitter.addWidget(self.frontmatter_raw)
         fm_splitter.setSizes([500, 320])
         right_panel_layout.addWidget(fm_splitter, 1)
-        self.save_fm_btn = QPushButton("Frontmatter speichern")
+        self.save_fm_btn = QPushButton(
+            QCoreApplication.translate("MainWindow", "Frontmatter speichern")
+        )
         self.save_fm_btn.clicked.connect(self.save_frontmatter_table)
         right_panel_layout.addWidget(self.save_fm_btn)
 
         options_row = QHBoxLayout()
-        self.dryrun_checkbox = QCheckBox("Dry Run")
+        self.dryrun_checkbox = QCheckBox(
+            QCoreApplication.translate("MainWindow", "Dry Run")
+        )
         self.dryrun_checkbox.setChecked(True)
-        self.only_if_key_value_checkbox = QCheckBox("Vorbedingung anwenden")
+        self.only_if_key_value_checkbox = QCheckBox(
+            QCoreApplication.translate("MainWindow", "Vorbedingung anwenden")
+        )
         self.only_if_key_value_checkbox.setChecked(False)
         options_row.addWidget(self.dryrun_checkbox)
         options_row.addWidget(self.only_if_key_value_checkbox)
         options_row.addStretch()
         right_panel_layout.addLayout(options_row)
 
-        self.match_all_checkbox = QCheckBox("Alle Elemente müssen matchen")
+        self.match_all_checkbox = QCheckBox(
+            QCoreApplication.translate("MainWindow", "Alle Elemente müssen matchen")
+        )
         self.match_all_checkbox.setChecked(False)
         options_row.addWidget(self.match_all_checkbox)
 
         param_row = QHBoxLayout()
-        self.key_label = QLabel("Key:")
+        self.key_label = QLabel(QCoreApplication.translate("MainWindow", "Key:"))
         self.key_input = QLineEdit()
-        self.key_input.setPlaceholderText("Key/Alter Key")
-        self.value_label = QLabel("Value:")
+        self.key_input.setPlaceholderText(
+            QCoreApplication.translate("MainWindow", "Key/Alter Key")
+        )
+        self.value_label = QLabel(QCoreApplication.translate("MainWindow", "Value:"))
         self.value_input = QLineEdit()
-        self.value_input.setPlaceholderText("Value (optional)")
-        self.newkey_label = QLabel("Neuer Key:")
+        self.value_input.setPlaceholderText(
+            QCoreApplication.translate("MainWindow", "Value (optional)")
+        )
+        self.newkey_label = QLabel(
+            QCoreApplication.translate("MainWindow", "Neuer Key:")
+        )
         self.newkey_input = QLineEdit()
-        self.newkey_input.setPlaceholderText("Neuer Key (für Umbenennen)")
-        self.precond_label = QLabel("Vorbedingung:")
+        self.newkey_input.setPlaceholderText(
+            QCoreApplication.translate("MainWindow", "Neuer Key (für Umbenennen)")
+        )
+        self.precond_label = QLabel(
+            QCoreApplication.translate("MainWindow", "Vorbedingung:")
+        )
         self.precondition_key_input = QLineEdit()
-        self.precondition_key_input.setPlaceholderText("Vorbedingung Key")
+        self.precondition_key_input.setPlaceholderText(
+            QCoreApplication.translate("MainWindow", "Vorbedingung Key")
+        )
         self.precondition_value_input = QLineEdit()
-        self.precondition_value_input.setPlaceholderText("Vorbedingung Value")
+        self.precondition_value_input.setPlaceholderText(
+            QCoreApplication.translate("MainWindow", "Vorbedingung Value")
+        )
         param_row.addWidget(self.key_label)
         param_row.addWidget(self.key_input)
         param_row.addWidget(self.value_label)
@@ -174,18 +303,32 @@ class FrontmatterTool(QMainWindow):
         update_precond_fields_enabled_state()
 
         batch_row1 = QHBoxLayout()
-        btn_batch_write = QPushButton("Batch: Key/Value schreiben")
-        btn_batch_remove = QPushButton("Batch: Key löschen")
-        btn_batch_rename = QPushButton("Batch: Key umbenennen")
+        btn_batch_write = QPushButton(
+            QCoreApplication.translate("MainWindow", "Batch: Key/Value schreiben")
+        )
+        btn_batch_remove = QPushButton(
+            QCoreApplication.translate("MainWindow", "Batch: Key löschen")
+        )
+        btn_batch_rename = QPushButton(
+            QCoreApplication.translate("MainWindow", "Batch: Key umbenennen")
+        )
         batch_row1.addWidget(btn_batch_write)
         batch_row1.addWidget(btn_batch_remove)
         batch_row1.addWidget(btn_batch_rename)
         right_panel_layout.addLayout(batch_row1)
         batch_row2 = QHBoxLayout()
-        btn_batch_check_exists = QPushButton("Batch: Key prüfen")
-        btn_batch_check_missing = QPushButton("Batch: Key fehlt prüfen")
-        btn_batch_check_value = QPushButton("Batch: Key/Value prüfen")
-        btn_batch_delete_files = QPushButton("Batch: Dateien löschen (K/V)")
+        btn_batch_check_exists = QPushButton(
+            QCoreApplication.translate("MainWindow", "Batch: Key prüfen")
+        )
+        btn_batch_check_missing = QPushButton(
+            QCoreApplication.translate("MainWindow", "Batch: Key fehlt prüfen")
+        )
+        btn_batch_check_value = QPushButton(
+            QCoreApplication.translate("MainWindow", "Batch: Key/Value prüfen")
+        )
+        btn_batch_delete_files = QPushButton(
+            QCoreApplication.translate("MainWindow", "Batch: Dateien löschen (K/V)")
+        )
         batch_row2.addWidget(btn_batch_check_exists)
         batch_row2.addWidget(btn_batch_check_missing)
         batch_row2.addWidget(btn_batch_check_value)
@@ -250,7 +393,9 @@ class FrontmatterTool(QMainWindow):
         self.log_text = QTextEdit()
         self.log_text.setMinimumHeight(80)
         self.log_text.setReadOnly(True)
-        self.log_clear_btn = QPushButton("Protokoll löschen")
+        self.log_clear_btn = QPushButton(
+            QCoreApplication.translate("MainWindow", "Protokoll löschen")
+        )
         self.log_clear_btn.setObjectName("logClearButton")
         self.log_clear_btn.clicked.connect(self.clear_log)
         log_row.addWidget(self.log_text, 1)
@@ -267,13 +412,24 @@ class FrontmatterTool(QMainWindow):
         else:
             self.frontmatter_display.clear_viewer()
             if file_path and is_dir:
-                self.log_message(f"Ordner ausgewählt: {os.path.basename(file_path)}")
+                self.log_message(
+                    QCoreApplication.translate(
+                        "MainWindow", "Ordner ausgewählt: {folder}"
+                    ).format(folder=os.path.basename(file_path))
+                )
             elif file_path:
                 self.log_message(
-                    f"Nicht unterstützte Datei/Element ausgewählt: {os.path.basename(file_path)}"
+                    QCoreApplication.translate(
+                        "MainWindow",
+                        "Nicht unterstützte Datei/Element ausgewählt: {file}",
+                    ).format(file=os.path.basename(file_path))
                 )
             elif not file_path:
-                self.log_message("Auswahl im Datei-Explorer aufgehoben.")
+                self.log_message(
+                    QCoreApplication.translate(
+                        "MainWindow", "Auswahl im Datei-Explorer aufgehoben."
+                    )
+                )
 
     def display_frontmatter_table(self, file_path: str):
         """
@@ -295,7 +451,9 @@ class FrontmatterTool(QMainWindow):
                 self.frontmatter_display.clear_viewer()
                 self.frontmatter_display.display_frontmatter({})
                 self.log_message(
-                    f"Info: Kein Frontmatter in {os.path.basename(file_path)} gefunden.",
+                    QCoreApplication.translate(
+                        "MainWindow", "Info: Kein Frontmatter in {file} gefunden."
+                    ).format(file=os.path.basename(file_path)),
                     level="warn",
                 )
                 return
@@ -322,14 +480,19 @@ class FrontmatterTool(QMainWindow):
             self.frontmatter_display.clear_viewer()
             self.frontmatter_raw.clear()
             self.log_message(
-                f"FEHLER: Ungültiges YAML in {os.path.basename(file_path)}: {ye}",
+                QCoreApplication.translate(
+                    "MainWindow", "FEHLER: Ungültiges YAML in {file}: {error}"
+                ).format(file=os.path.basename(file_path), error=ye),
                 level="error",
             )
         except Exception as e:
             self.frontmatter_display.clear_viewer()
             self.frontmatter_raw.clear()
             self.log_message(
-                f"FEHLER beim Anzeigen von Frontmatter: {e}", level="error"
+                QCoreApplication.translate(
+                    "MainWindow", "FEHLER beim Anzeigen von Frontmatter: {error}"
+                ).format(error=e),
+                level="error",
             )
 
     def _extract_frontmatter_block(self, raw: str) -> str:
@@ -353,7 +516,11 @@ class FrontmatterTool(QMainWindow):
 
         file_path = getattr(self, "_current_frontmatter_file", None)
         if not file_path:
-            self.log_message("Kein Frontmatter-File ausgewählt.")
+            self.log_message(
+                QCoreApplication.translate(
+                    "MainWindow", "Kein Frontmatter-File ausgewählt."
+                )
+            )
             return
         meta = self.frontmatter_display.get_metadata()
         new_meta = {}
@@ -388,13 +555,18 @@ class FrontmatterTool(QMainWindow):
             with open(file_path, "wb") as f:
                 frontmatter.dump(post, f, encoding="utf-8")
             self.log_message(
-                f"Frontmatter gespeichert für {os.path.basename(file_path)}.",
+                QCoreApplication.translate(
+                    "MainWindow", "Frontmatter gespeichert für {file}."
+                ).format(file=os.path.basename(file_path)),
                 level="success",
             )
             self.display_frontmatter_table(file_path)
         except Exception as e:
             self.log_message(
-                f"FEHLER beim Speichern des Frontmatters: {e}", level="error"
+                QCoreApplication.translate(
+                    "MainWindow", "FEHLER beim Speichern des Frontmatters: {error}"
+                ).format(error=e),
+                level="error",
             )
 
     def select_directory(self):
@@ -402,12 +574,18 @@ class FrontmatterTool(QMainWindow):
         Öffnet einen Dialog zur Auswahl des Arbeitsverzeichnisses.
         """
         dir_path = QFileDialog.getExistingDirectory(
-            self, "Arbeitsverzeichnis auswählen", self.directory or QDir.homePath()
+            self,
+            QCoreApplication.translate("MainWindow", "Arbeitsverzeichnis auswählen"),
+            self.directory or QDir.homePath(),
         )
         if dir_path:
             self.directory = dir_path
             self.dir_label.setText(dir_path)
-            self.log_message(f"Arbeitsverzeichnis gesetzt: {dir_path}")
+            self.log_message(
+                QCoreApplication.translate(
+                    "MainWindow", "Arbeitsverzeichnis gesetzt: {dir_path}"
+                ).format(dir_path=dir_path)
+            )
             self.tree_view.set_root_directory(dir_path)
             self.frontmatter_display.clear_viewer()
 
@@ -450,7 +628,10 @@ class FrontmatterTool(QMainWindow):
         """
         if not (file_path and os.path.isfile(file_path)):
             self.log_message(
-                f"Fehler: Datei '{file_path}' nicht gefunden für Löschaktion.",
+                QCoreApplication.translate(
+                    "MainWindow",
+                    "Fehler: Datei '{file_path}' nicht gefunden für Löschaktion.",
+                ).format(file_path=file_path),
                 level="error",
             )
             return
@@ -458,13 +639,18 @@ class FrontmatterTool(QMainWindow):
         base_name = os.path.basename(file_path)
         if dryrun:
             self.log_message(
-                f"[DryRun] Einzel: Datei '{base_name}' würde gelöscht.", level="warn"
+                QCoreApplication.translate(
+                    "MainWindow", "[DryRun] Einzel: Datei '{file}' würde gelöscht."
+                ).format(file=base_name),
+                level="warn",
             )
             return
         reply = QMessageBox.question(
             self,
-            "Datei löschen bestätigen",
-            f"Soll die Datei '{base_name}' wirklich gelöscht werden?",
+            QCoreApplication.translate("MainWindow", "Datei löschen bestätigen"),
+            QCoreApplication.translate(
+                "MainWindow", "Soll die Datei '{filename}' wirklich gelöscht werden?"
+            ).format(filename=base_name),
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
             QMessageBox.StandardButton.No,
         )
@@ -472,17 +658,25 @@ class FrontmatterTool(QMainWindow):
             try:
                 os.remove(file_path)
                 self.log_message(
-                    f"Einzel: Datei '{base_name}' ({file_path}) gelöscht.",
+                    QCoreApplication.translate(
+                        "MainWindow", "Einzel: Datei '{file}' ({path}) gelöscht."
+                    ).format(file=base_name, path=file_path),
                     level="success",
                 )
                 self.frontmatter_display.clear_viewer()
             except Exception as e:
                 self.log_message(
-                    f"FEHLER beim Löschen der Datei '{base_name}': {e}", level="error"
+                    QCoreApplication.translate(
+                        "MainWindow", "FEHLER beim Löschen der Datei '{file}': {error}"
+                    ).format(file=base_name, error=e),
+                    level="error",
                 )
         else:
             self.log_message(
-                f"Einzel: Löschen der Datei '{base_name}' abgebrochen.", level="warn"
+                QCoreApplication.translate(
+                    "MainWindow", "Einzel: Löschen der Datei '{file}' abgebrochen."
+                ).format(file=base_name),
+                level="warn",
             )
 
     def handle_single_file_write_kv(self, file_path: str):
@@ -493,7 +687,10 @@ class FrontmatterTool(QMainWindow):
             file_path and os.path.isfile(file_path) and is_supported_file(file_path)
         ):
             self.log_message(
-                f"Fehler: Datei '{file_path}' nicht unterstützt oder nicht gefunden für Key/Value schreiben.",
+                QCoreApplication.translate(
+                    "MainWindow",
+                    "Fehler: Datei '{file_path}' nicht unterstützt oder nicht gefunden für Key/Value schreiben.",
+                ).format(file_path=file_path),
                 level="error",
             )
             return
@@ -501,9 +698,11 @@ class FrontmatterTool(QMainWindow):
         base_name = os.path.basename(file_path)
         dialog = KeyValueDialog(
             self,
-            window_title=f"Key/Value für '{base_name}' schreiben",
-            key_label="Ziel-Key:",
-            value_label="Neuer Wert:",
+            window_title=QCoreApplication.translate(
+                "MainWindow", "Key/Value für '{filename}' schreiben"
+            ).format(filename=base_name),
+            key_label=QCoreApplication.translate("MainWindow", "Ziel-Key:"),
+            value_label=QCoreApplication.translate("MainWindow", "Neuer Wert:"),
         )
 
         if dialog.exec() == QDialog.DialogCode.Accepted:
@@ -513,8 +712,10 @@ class FrontmatterTool(QMainWindow):
                 if not key_from_dialog:
                     QMessageBox.warning(
                         self,
-                        "Eingabefehler",
-                        "Einzel: Key darf im Dialog nicht leer sein.",
+                        QCoreApplication.translate("MainWindow", "Eingabefehler"),
+                        QCoreApplication.translate(
+                            "MainWindow", "Einzel: Key darf im Dialog nicht leer sein."
+                        ),
                     )
                     self.log_message(
                         f"FEHLER: Einzel: Key/Value schreiben für '{base_name}' abgebrochen - Key im Dialog war leer.",
@@ -616,15 +817,21 @@ class FrontmatterTool(QMainWindow):
         base_name = os.path.basename(file_path)
         dialog = KeyDialog(  # Neuer KeyDialog wird verwendet
             self,
-            window_title=f"Key aus '{base_name}' entfernen",
-            key_label="Zu löschender Key:",
+            window_title=QCoreApplication.translate(
+                "MainWindow", "Key aus '{filename}' entfernen"
+            ).format(filename=base_name),
+            key_label=QCoreApplication.translate("MainWindow", "Zu löschender Key:"),
         )
 
         if dialog.exec() == QDialog.DialogCode.Accepted:
             key_to_delete = dialog.get_key()  # Key aus dem Dialog holen
             if not key_to_delete:  # Prüfen, ob ein Key eingegeben wurde
                 QMessageBox.warning(
-                    self, "Eingabefehler", "Einzel: Key darf im Dialog nicht leer sein."
+                    self,
+                    QCoreApplication.translate("MainWindow", "Eingabefehler"),
+                    QCoreApplication.translate(
+                        "MainWindow", "Einzel: Key darf im Dialog nicht leer sein."
+                    ),
                 )
                 self.log_message(
                     f"FEHLER: Einzel: Key entfernen für '{base_name}' abgebrochen - Key im Dialog war leer.",
@@ -772,9 +979,17 @@ class FrontmatterTool(QMainWindow):
         key_to_delete = self.key_input.text().strip()
         if not key_to_delete:
             QMessageBox.warning(
-                self, "Eingabefehler", "Batch Key entfernen: Bitte Key angeben."
+                self,
+                QCoreApplication.translate("MainWindow", "Eingabefehler"),
+                QCoreApplication.translate(
+                    "MainWindow", "Batch Key entfernen: Bitte Key angeben."
+                ),
             )
-            self.log_message("Batch Key entfernen: Key muss angegeben werden!")
+            self.log_message(
+                QCoreApplication.translate(
+                    "MainWindow", "Batch Key entfernen: Key muss angegeben werden!"
+                )
+            )
             return
         params = {"key": key_to_delete}
         is_dry_run = self.dryrun_checkbox.isChecked()
@@ -792,9 +1007,18 @@ class FrontmatterTool(QMainWindow):
 
         if not key_to_write:
             QMessageBox.warning(
-                self, "Eingabefehler", "Batch Key/Value schreiben: Bitte Key angeben."
+                self,
+                QCoreApplication.translate("MainWindow", "Eingabefehler"),
+                QCoreApplication.translate(
+                    "MainWindow", "Batch Key/Value schreiben: Bitte Key angeben."
+                ),
             )
-            self.log_message("Batch Key/Value schreiben: Key muss angegeben werden!")
+            self.log_message(
+                QCoreApplication.translate(
+                    "MainWindow",
+                    "Batch Key/Value schreiben: Key muss angegeben werden!",
+                )
+            )
             return
 
         params = {"key": key_to_write, "value": value_to_write}
@@ -816,28 +1040,47 @@ class FrontmatterTool(QMainWindow):
         if not old_key_name:
             QMessageBox.warning(
                 self,
-                "Eingabefehler",
-                "Batch Key umbenennen: Bitte 'Alten Key' (im Feld 'Key/Alter Key') angeben.",
+                QCoreApplication.translate("MainWindow", "Eingabefehler"),
+                QCoreApplication.translate(
+                    "MainWindow",
+                    "Batch Key umbenennen: Bitte 'Alten Key' (im Feld 'Key/Alter Key') angeben.",
+                ),
             )
-            self.log_message("Batch Key umbenennen: 'Alter Key' fehlt!")
+            self.log_message(
+                QCoreApplication.translate(
+                    "MainWindow", "Batch Key umbenennen: 'Alter Key' fehlt!"
+                )
+            )
             return
         if not new_key_name:
             QMessageBox.warning(
                 self,
-                "Eingabefehler",
-                "Batch Key umbenennen: Bitte 'Neuen Key' angeben.",
+                QCoreApplication.translate("MainWindow", "Eingabefehler"),
+                QCoreApplication.translate(
+                    "MainWindow", "Batch Key umbenennen: Bitte 'Neuen Key' angeben."
+                ),
             )
-            self.log_message("Batch Key umbenennen: 'Neuer Key' fehlt!")
+            self.log_message(
+                QCoreApplication.translate(
+                    "MainWindow", "Batch Key umbenennen: 'Neuer Key' fehlt!"
+                )
+            )
             return
 
         if old_key_name == new_key_name:
             QMessageBox.information(
                 self,
-                "Info",
-                "Batch Key umbenennen: Alter und neuer Key sind identisch. Keine Aktion notwendig.",
+                QCoreApplication.translate("MainWindow", "Info"),
+                QCoreApplication.translate(
+                    "MainWindow",
+                    "Batch Key umbenennen: Alter und neuer Key sind identisch. Keine Aktion notwendig.",
+                ),
             )
             self.log_message(
-                "Batch Key umbenennen: Alter und neuer Key sind identisch."
+                QCoreApplication.translate(
+                    "MainWindow",
+                    "Batch Key umbenennen: Alter und neuer Key sind identisch.",
+                )
             )
             return
 
@@ -861,24 +1104,36 @@ class FrontmatterTool(QMainWindow):
         if not key_to_match or not value_to_match:
             QMessageBox.warning(
                 self,
-                "Eingabefehler",
-                "Batch Dateien löschen: Key und Value müssen angegeben werden!",
+                QCoreApplication.translate("MainWindow", "Eingabefehler"),
+                QCoreApplication.translate(
+                    "MainWindow",
+                    "Batch Dateien löschen: Key und Value müssen angegeben werden!",
+                ),
             )
-            self.log_message("Batch Dateien löschen: Key und Value fehlen!")
+            self.log_message(
+                QCoreApplication.translate(
+                    "MainWindow", "Batch Dateien löschen: Key und Value fehlen!"
+                )
+            )
             return
 
         if not is_dry_run:
             reply = QMessageBox.question(
                 self,
-                "Löschen bestätigen (Batch)",
-                f"Sind Sie sicher, dass Sie alle Dateien löschen wollen, \n"
-                f"deren Frontmatter '{key_to_match}: {value_to_match}' enthält?\n"
-                f"Diese Aktion kann nicht rückgängig gemacht werden!",
+                QCoreApplication.translate("MainWindow", "Löschen bestätigen (Batch)"),
+                QCoreApplication.translate(
+                    "MainWindow",
+                    "Sind Sie sicher, dass Sie alle Dateien löschen wollen, \nderen Frontmatter '{key}: {value}' enthält?\nDiese Aktion kann nicht rückgängig gemacht werden!",
+                ).format(key=key_to_match, value=value_to_match),
                 QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
                 QMessageBox.StandardButton.No,
             )
             if reply == QMessageBox.StandardButton.No:
-                self.log_message("Batch Löschvorgang abgebrochen.")
+                self.log_message(
+                    QCoreApplication.translate(
+                        "MainWindow", "Batch Löschvorgang abgebrochen."
+                    )
+                )
                 return
 
         params = {"key": key_to_match, "value": value_to_match}
@@ -898,9 +1153,15 @@ class FrontmatterTool(QMainWindow):
         key_to_check = self.key_input.text().strip()
         if not key_to_check:
             QMessageBox.warning(
-                self, "Eingabefehler", "Batch Key prüfen: Key muss angegeben werden!"
+                self,
+                QCoreApplication.translate("MainWindow", "Eingabefehler"),
+                QCoreApplication.translate(
+                    "MainWindow", "Batch Key prüfen: Key muss angegeben werden!"
+                ),
             )
-            self.log_message("Batch Key prüfen: Key fehlt!")
+            self.log_message(
+                QCoreApplication.translate("MainWindow", "Batch Key prüfen: Key fehlt!")
+            )
             return
 
         params = {"key": key_to_check}
@@ -919,10 +1180,16 @@ class FrontmatterTool(QMainWindow):
         if not key_to_check:
             QMessageBox.warning(
                 self,
-                "Eingabefehler",
-                "Batch Key fehlt prüfen: Key muss angegeben werden!",
+                QCoreApplication.translate("MainWindow", "Eingabefehler"),
+                QCoreApplication.translate(
+                    "MainWindow", "Batch Key fehlt prüfen: Key muss angegeben werden!"
+                ),
             )
-            self.log_message("Batch Key fehlt prüfen: Key fehlt!")
+            self.log_message(
+                QCoreApplication.translate(
+                    "MainWindow", "Batch Key fehlt prüfen: Key fehlt!"
+                )
+            )
             return
 
         params = {"key": key_to_check}
@@ -943,18 +1210,30 @@ class FrontmatterTool(QMainWindow):
         if not key_to_check:
             QMessageBox.warning(
                 self,
-                "Eingabefehler",
-                "Batch Key/Value prüfen: Key muss angegeben werden!",
+                QCoreApplication.translate("MainWindow", "Eingabefehler"),
+                QCoreApplication.translate(
+                    "MainWindow", "Batch Key/Value prüfen: Key muss angegeben werden!"
+                ),
             )
-            self.log_message("Batch Key/Value prüfen: Key fehlt!")
+            self.log_message(
+                QCoreApplication.translate(
+                    "MainWindow", "Batch Key/Value prüfen: Key fehlt!"
+                )
+            )
             return
         if not value_to_match:
             QMessageBox.warning(
                 self,
-                "Eingabefehler",
-                "Batch Key/Value prüfen: Value muss angegeben werden!",
+                QCoreApplication.translate("MainWindow", "Eingabefehler"),
+                QCoreApplication.translate(
+                    "MainWindow", "Batch Key/Value prüfen: Value muss angegeben werden!"
+                ),
             )
-            self.log_message("Batch Key/Value prüfen: Value fehlt!")
+            self.log_message(
+                QCoreApplication.translate(
+                    "MainWindow", "Batch Key/Value prüfen: Value fehlt!"
+                )
+            )
             return
 
         params = {"key": key_to_check, "value": value_to_match}
@@ -971,11 +1250,17 @@ class FrontmatterTool(QMainWindow):
         """
         QMessageBox.information(
             self,
-            "Noch nicht implementiert",
-            f"Die Batch-Aktion '{action_name}' muss noch auf die neue Aktionsklassen-Struktur umgestellt werden.",
+            QCoreApplication.translate("MainWindow", "Noch nicht implementiert"),
+            QCoreApplication.translate(
+                "MainWindow",
+                "Die Batch-Aktion '{action}' muss noch auf die neue Aktionsklassen-Struktur umgestellt werden.",
+            ).format(action=action_name),
         )
         self.log_message(
-            f"Batch-Aktion '{action_name}' ist noch nicht auf die neue Struktur umgestellt."
+            QCoreApplication.translate(
+                "MainWindow",
+                "Batch-Aktion '{action}' ist noch nicht auf die neue Struktur umgestellt.",
+            ).format(action=action_name)
         )
 
     def handle_single_file_rename_key(self, file_path: str):
@@ -992,9 +1277,11 @@ class FrontmatterTool(QMainWindow):
         base_name = os.path.basename(file_path)
         dialog = RenameKeyDialog(
             self,
-            window_title=f"Key umbenennen in '{base_name}'",
-            old_key_label="Alter Key:",
-            new_key_label="Neuer Key:",
+            window_title=QCoreApplication.translate(
+                "MainWindow", "Key umbenennen in '{filename}'"
+            ).format(filename=base_name),
+            old_key_label=QCoreApplication.translate("MainWindow", "Alter Key:"),
+            new_key_label=QCoreApplication.translate("MainWindow", "Neuer Key:"),
         )
         if dialog.exec() == QDialog.DialogCode.Accepted:
             keys = dialog.get_keys()
@@ -1002,7 +1289,11 @@ class FrontmatterTool(QMainWindow):
                 old_key, new_key = keys
                 if not old_key or not new_key:
                     QMessageBox.warning(
-                        self, "Eingabefehler", "Beide Felder müssen ausgefüllt sein."
+                        self,
+                        QCoreApplication.translate("MainWindow", "Eingabefehler"),
+                        QCoreApplication.translate(
+                            "MainWindow", "Beide Felder müssen ausgefüllt sein."
+                        ),
                     )
                     self.log_message(
                         f"FEHLER: Einzel: Key umbenennen für '{base_name}' abgebrochen - Key im Dialog war leer.",
@@ -1012,8 +1303,11 @@ class FrontmatterTool(QMainWindow):
                 if old_key == new_key:
                     QMessageBox.information(
                         self,
-                        "Info",
-                        "Alter und neuer Key sind identisch. Keine Änderung.",
+                        QCoreApplication.translate("MainWindow", "Info"),
+                        QCoreApplication.translate(
+                            "MainWindow",
+                            "Alter und neuer Key sind identisch. Keine Änderung.",
+                        ),
                     )
                     self.log_message(
                         f"Info: Einzel: In '{base_name}': Alter und neuer Key identisch. Keine Änderung.",
