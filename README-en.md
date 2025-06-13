@@ -2,7 +2,7 @@
 
 A powerful, modular desktop tool (PySide6) for convenient editing, analysis and batch management of YAML frontmatter in Markdown files - inspired by Obsidian, but can be used independently.
 
-![Screenshot](image.png)
+![Screenshot](image-en.png)
 
 ## Features
 
