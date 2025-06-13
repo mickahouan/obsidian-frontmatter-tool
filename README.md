@@ -52,13 +52,9 @@ python main.py
 
 Die Sprache der Benutzeroberfläche ist standardmäßig Englisch.
 
-Wenn du Deutsch als Sprache nutzen möchtest, öffne die Datei `main.py` und ändere die Variable `language` (ganz oben in der Funktion `start_app`) auf `de`:
+Du kannst die Sprache jederzeit im laufenden Programm über das Menü **Language** (oben in der Menüleiste) zwischen Deutsch und Englisch umschalten.
 
-```python
-language = "de"  # <--- Hier Sprache ändern: 'de' oder 'en'
-```
-
-Ein Sprachwechsel zur Laufzeit über ein Menü ist aktuell nicht möglich.
+Ein manuelles Editieren der Datei `main.py` ist nicht mehr nötig.
 
 ## Tests ausführen
 

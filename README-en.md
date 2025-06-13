@@ -53,13 +53,9 @@ python main.py
 
 The user interface language is set to English by default.
 
-If you want to use German, open the file `main.py` and change the variable `language` (at the top of the `start_app` function) to `de`:
+You can change the language at any time while the program is running via the **Language** menu (at the top menu bar), switching between English and German.
 
-```python
-language = "de"  # <--- Change language here: 'de' or 'en'
-```
-
-Changing the language at runtime via a menu is currently not possible.
+Manual editing of the `main.py` file is no longer necessary.
 
 ## Execute tests
 

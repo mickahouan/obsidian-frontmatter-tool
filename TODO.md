@@ -1,6 +1,6 @@
 ## Hinweis zur Sprache
 
-Die Sprache der Anwendung kann aktuell nur in der Datei `main.py` über die Variable `language` geändert werden (Standard: Englisch). Ein Menü für den Sprachwechsel ist derzeit nicht möglich.
+Die Sprache der Anwendung kann jetzt jederzeit über das Menü **Language** gewechselt werden (Deutsch/Englisch). Ein manueller Eingriff in `main.py` ist nicht mehr nötig.
 
 ## Milestone 1: Grundgerüst und Kernfunktionalität (Abgeschlossen)
 
@@ -72,6 +72,7 @@ Die Sprache der Anwendung kann aktuell nur in der Datei `main.py` über die Vari
 6. [X] Visuelle/formatierte Log-Ausgabe: Farben, Emojis, Font-Styles je nach Log-Typ
 7. [ ] Komfortfunktionen für Table-Viewer (Zeile hinzufügen/löschen, Kontextmenü, Validierung, Auto-Save)
 8. [ ] Weitere UI-Feinschliffe und Icons
+9. [X] Sprachumschaltung zur Laufzeit über Menü **Language** (Deutsch/Englisch)
 
 ### Phase 3: Fortgeschrittene Funktionen und Robustheit
 
@@ -81,8 +82,8 @@ Die Sprache der Anwendung kann aktuell nur in der Datei `main.py` über die Vari
 
 ### Phase 4: Internationalisierung
 1. [X] Mehrsprachige Unterstützung (Deutsch, Englisch)
+2. [X] Sprachwechsel zur Laufzeit über Menü
 
 ---
 
-*Stand: 09.06.2025 – Phase 2, Punkt 4/5/7/8 und Phase 3 sind als nächstes umzusetzen.*
-*Stand: 12.06.2025 – Phase 4 umgesetzt.*
+*Stand: 12.06.2025 – Sprachumschaltung im Menü umgesetzt. Phase 2, Punkt 4/5/7/8 und Phase 3 sind als nächstes umzusetzen.*

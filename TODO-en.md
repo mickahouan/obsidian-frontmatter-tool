@@ -1,6 +1,6 @@
 ## Note on language
 
-The application language can currently only be changed in the file `main.py` via the variable `language` (default: English). A menu for changing the language at runtime is not available at the moment.
+The application language can now be changed at any time via the **Language** menu (German/English). Manual editing of `main.py` is no longer required.
 
 ## Milestone 1: Basic framework and core functionality (Completed)
 
@@ -73,6 +73,7 @@ The application language can currently only be changed in the file `main.py` via
 * [x] Visual/formatted log output: colors, emojis, font styles depending on log type
 * [ ] Convenience functions for Table Viewer (add/delete row, context menu, validation, auto-save)
 * [ ] Further UI refinements and icons
+* [x] Language switching at runtime via **Language** menu (German/English)
 
 ### Phase 3: Advanced functions and robustness
 
@@ -82,4 +83,4 @@ The application language can currently only be changed in the file `main.py` via
 
 * * *
 
-*Status: 09.06.2025 - Phase 2, points 4/5/7/8 and phase 3 are to be implemented next.*
+*Status: 12.06.2025 – Language switching via menu implemented. Phase 2, points 4/5/7/8 and phase 3 are to be implemented next.*
