@@ -1,68 +1,69 @@
 # Obsidian Frontmatter Tool
 
-Ein leistungsstarkes, modulares Desktop-Tool (PySide6) zur komfortablen Bearbeitung, Analyse und Batch-Verwaltung von YAML-Frontmatter in Markdown-Dateien – inspiriert von Obsidian, aber unabhängig nutzbar.
+A powerful, modular desktop tool (PySide6) for convenient editing, analysis and batch management of YAML frontmatter in Markdown files - inspired by Obsidian, but can be used independently.
 
-![Screenshot](image.png)
+![Screenshot](image-en.png)
 
 ## Features
 
-- **Datei-Explorer** mit Kontextmenü für Einzeldatei-Aktionen (Key/Value schreiben, Key löschen, Key umbenennen, Datei löschen)
-- **Editierbarer Frontmatter-Viewer** (List-View):
-  - Typauswahl pro Key (Text, Liste, Zahl, Checkbox, Datum)
-  - Änderungen direkt speichern
-  - Automatische Typ-Erkennung und -Konvertierung
-  - Geteilte Ansicht: Tabelle (editierbar) & YAML-Ansicht (readonly)
-- **Batch-Aktionen** für viele Dateien:
-  - Key/Value schreiben, Key löschen, Key umbenennen
-  - Key/Value prüfen, Dateien nach Kriterium löschen
-  - Flexible Vorbedingungen (inkl. value_matches-Logik)
-  - Dry-Run-Modus für gefahrlose Tests
-- **Protokollbereich** mit farbiger, formatierter Log-Ausgabe (inkl. Emojis)
-- **Cyberpunk-Theme** (dunkel, modern, anpassbar)
-- **Robuste Fehlerbehandlung** (YAML, Dateioperationen)
-- **Modularer, testbarer Code** (Unit-Tests für Kernfunktionen)
+* **File explorer** with context menu for individual file actions (write key/value, delete key, rename key, delete file)
+* **Editable frontmatter viewer** (list view):
+  * Type selection per key (text, list, number, checkbox, date)
+  * Save changes directly
+  * Automatic type detection and conversion
+  * Split view: Table (editable) & YAML view (read-only)
+* **Batch actions** for many files:
+  * Write key/value, delete key, rename key
+  * Check key/value, delete files according to criteria
+  * Flexible preconditions (incl. value\_matches logic)
+  * Dry-run mode for safe testing
+* **Log area** with colored, formatted log output (incl. emojis)
+* **Cyberpunk theme** (dark, modern, customizable)
+* **Robust error handling** (YAML, file operations)
+* **Modular, testable code** (unit tests for core functions)
 
 ## Installation
 
-1. **Python 3.12+** installieren
-2. Repository klonen:
+1. **Install Python 3.12+**
 
-   ```zsh
-   git clone <repo-url>
-   cd frontmatter_tool_project
-   ```
+2. Clone repository:
 
-3. Abhängigkeiten installieren (empfohlen: venv):
+    ```zsh
+    git clone <repo-url>
+    cd frontmatter_tool_project
+    ```
 
-   ```zsh
-   python -m venv .venv
-   source .venv/bin/activate
-   pip install -r requirements.txt
-   # oder mit Poetry:
-   poetry install
-   ```
+3. Install dependencies (recommended: venv):
 
-## Starten
+    ```zsh
+    python -m venv .venv
+    source .venv/bin/activate
+    pip install -r requirements.txt
+    # oder mit Poetry:
+    poetry install
+    ```
+
+## Start
 
 ```zsh
 python main.py
 ```
 
-## Sprache ändern
+## Language selection
 
-Die Sprache der Benutzeroberfläche ist standardmäßig Englisch.
+The user interface language is set to English by default.
 
-Du kannst die Sprache jederzeit im laufenden Programm über das Menü **Language** (oben in der Menüleiste) zwischen Deutsch und Englisch umschalten.
+You can change the language at any time while the program is running via the **Language** menu (at the top menu bar), switching between English and German.
 
-Ein manuelles Editieren der Datei `main.py` ist nicht mehr nötig.
+Manual editing of the `main.py` file is no longer necessary.
 
-## Tests ausführen
+## Execute tests
 
 ```zsh
 pytest tests/
 ```
 
-## Projektstruktur (Auszug)
+## Project structure (excerpt)
 
 ```text
 main.py
@@ -76,17 +77,17 @@ app/
 TODO.md                 # Aufgaben & Milestones
 ```
 
-## Hinweise
+## Notes
 
-- Das Tool arbeitet direkt auf Markdown-Dateien mit YAML-Frontmatter (z.B. aus Obsidian).
-- Listen, Zahlen, Checkboxen und Datumswerte werden automatisch erkannt und korrekt gespeichert.
-- Die Log-Ausgabe ist farbig und hebt Fehler, Warnungen, Infos und Erfolge visuell hervor.
-- Komfortfunktionen wie Zeile hinzufügen/löschen, Validierung etc. sind in Planung (siehe TODO.md).
+* The tool works directly on Markdown files with YAML frontmatter (e.g. from Obsidian).
+* Lists, numbers, checkboxes and date values are automatically recognized and saved correctly.
+* The log output is in color and visually highlights errors, warnings, information and successes.
+* Comfort functions such as add/delete line, validation etc. are being planned (see TODO.md).
 
-## Lizenz
+## License
 
 MIT
 
----
+* * *
 
-**Entwickelt mit ❤️ für die Obsidian- und Markdown-Community.**
+**Developed with ❤️ for the Obsidian and Markdown community.**
