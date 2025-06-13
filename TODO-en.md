@@ -1,3 +1,7 @@
+## Note on language
+
+The application language can currently only be changed in the file `main.py` via the variable `language` (default: English). A menu for changing the language at runtime is not available at the moment.
+
 ## Milestone 1: Basic framework and core functionality (Completed)
 
 * **GUI basic structure (PySide6):**

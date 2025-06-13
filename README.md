@@ -48,6 +48,18 @@ Ein leistungsstarkes, modulares Desktop-Tool (PySide6) zur komfortablen Bearbeit
 python main.py
 ```
 
+## Sprache ändern
+
+Die Sprache der Benutzeroberfläche ist standardmäßig Englisch.
+
+Wenn du Deutsch als Sprache nutzen möchtest, öffne die Datei `main.py` und ändere die Variable `language` (ganz oben in der Funktion `start_app`) auf `de`:
+
+```python
+language = "de"  # <--- Hier Sprache ändern: 'de' oder 'en'
+```
+
+Ein Sprachwechsel zur Laufzeit über ein Menü ist aktuell nicht möglich.
+
 ## Tests ausführen
 
 ```zsh

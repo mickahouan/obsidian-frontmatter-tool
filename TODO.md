@@ -1,3 +1,7 @@
+## Hinweis zur Sprache
+
+Die Sprache der Anwendung kann aktuell nur in der Datei `main.py` über die Variable `language` geändert werden (Standard: Englisch). Ein Menü für den Sprachwechsel ist derzeit nicht möglich.
+
 ## Milestone 1: Grundgerüst und Kernfunktionalität (Abgeschlossen)
 
 * **GUI-Grundstruktur (PySide6):**

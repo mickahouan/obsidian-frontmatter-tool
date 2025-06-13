@@ -49,6 +49,18 @@ A powerful, modular desktop tool (PySide6) for convenient editing, analysis and 
 python main.py
 ```
 
+## Language selection
+
+The user interface language is set to English by default.
+
+If you want to use German, open the file `main.py` and change the variable `language` (at the top of the `start_app` function) to `de`:
+
+```python
+language = "de"  # <--- Change language here: 'de' or 'en'
+```
+
+Changing the language at runtime via a menu is currently not possible.
+
 ## Execute tests
 
 ```zsh
