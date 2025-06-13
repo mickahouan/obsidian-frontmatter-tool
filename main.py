@@ -20,7 +20,7 @@ def start_app():
     """
     app = QApplication(sys.argv)
     # Sprachwahl: 'de' für Deutsch, 'en' für Englisch
-    language = "en"  # <--- Hier Sprache ändern: 'de' oder 'en'
+    language = "en"  # <--- hier Sprache ändern: 'de' oder 'en'
     translator = QTranslator()
     if language == "de":
         translator.load("translations/de.qm")
@@ -34,7 +34,7 @@ def start_app():
 
 def show_table_demo():
     app = QApplication(sys.argv)
-    language = "en"  # <--- Hier Sprache ändern: 'de' oder 'en'
+    language = "en"  # <--- hier Sprache ändern: 'de' oder 'en'
     translator = QTranslator()
     if language == "de":
         translator.load("translations_de.qm")

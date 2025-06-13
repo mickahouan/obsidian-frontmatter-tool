@@ -8,6 +8,7 @@ import os
 import frontmatter
 import yaml
 from PySide6.QtCore import QCoreApplication, QDir, Qt
+from PySide6.QtGui import QAction
 from PySide6.QtWidgets import (
     # QAction,
     QApplication,
@@ -28,7 +29,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from .core.actions import (
+from app.core.actions import (
     CheckKeyExistsAction,
     CheckKeyMissingAction,
     CheckKeyValueMatchAction,
@@ -56,6 +57,7 @@ class FrontmatterTool(QMainWindow):
         Initialisiert das Hauptfenster und die UI-Komponenten.
         """
         super().__init__()
+        self.dryrun_checkbox = None
         self.language = language
         self.translator = app_translator
         self.setWindowTitle(
@@ -67,8 +69,8 @@ class FrontmatterTool(QMainWindow):
         self.directory = ""
 
         self.init_ui()
-        # self._init_menu()
         self.setStyleSheet(get_cyberpunk_stylesheet())
+        self._init_menu()
 
     def _init_menu(self):
         menubar = self.menuBar()
@@ -89,8 +91,8 @@ class FrontmatterTool(QMainWindow):
         def set_lang_en():
             self._change_language("en")
 
-        action_de.triggered.connect(set_lang_de)
-        action_en.triggered.connect(set_lang_en)
+        action_de.triggered.connect(set_lang_de) # type: ignore
+        action_en.triggered.connect(set_lang_en) # type: ignore
         self._lang_actions = {"de": action_de, "en": action_en}
 
     def _change_language(self, lang):
@@ -111,8 +113,9 @@ class FrontmatterTool(QMainWindow):
         # Menü-Checkboxen aktualisieren
         for lang_key, act in self._lang_actions.items():
             act.setChecked(lang_key == lang)
-        # UI-Elemente neu übersetzen
-        self._retranslate_ui()
+        # UI-Elemente neu übersetzen, aber nur wenn UI schon initialisiert ist
+        if getattr(self, "dryrun_checkbox", None) is not None:
+            self._retranslate_ui()
 
     def _retranslate_ui(self):
         # Übersetzt alle UI-Elemente neu (nur die wichtigsten)
@@ -127,9 +130,10 @@ class FrontmatterTool(QMainWindow):
         self.save_fm_btn.setText(
             QCoreApplication.translate("MainWindow", "Frontmatter speichern")
         )
-        self.dryrun_checkbox.setText(
-            QCoreApplication.translate("MainWindow", "Dry Run")
-        )
+        if self.dryrun_checkbox is not None:
+            self.dryrun_checkbox.setText(
+                QCoreApplication.translate("MainWindow", "Dry Run")
+            )
         self.only_if_key_value_checkbox.setText(
             QCoreApplication.translate("MainWindow", "Vorbedingung anwenden")
         )
@@ -178,7 +182,7 @@ class FrontmatterTool(QMainWindow):
         dir_btn = QPushButton(
             QCoreApplication.translate("MainWindow", "Verzeichnis auswählen")
         )
-        dir_btn.clicked.connect(self.select_directory)
+        dir_btn.clicked.connect(self.select_directory) # type: ignore
         self.dir_label = QLabel(
             QCoreApplication.translate("MainWindow", "Kein Verzeichnis ausgewählt")
         )
@@ -635,7 +639,7 @@ class FrontmatterTool(QMainWindow):
                 level="error",
             )
             return
-        dryrun = self.dryrun_checkbox.isChecked()
+        dryrun = self.dryrun_checkbox.isChecked() if self.dryrun_checkbox is not None else False
         base_name = os.path.basename(file_path)
         if dryrun:
             self.log_message(
@@ -734,7 +738,7 @@ class FrontmatterTool(QMainWindow):
                 else:
                     final_value_to_write = raw_value_from_dialog
 
-                dryrun = self.dryrun_checkbox.isChecked()
+                dryrun = self.dryrun_checkbox.isChecked() if self.dryrun_checkbox is not None else False
                 try:
                     with open(file_path, "r", encoding="utf-8") as f_in:
                         post = frontmatter.load(f_in)
@@ -744,7 +748,7 @@ class FrontmatterTool(QMainWindow):
                     )  # Wert aus der Datei holen
 
                     changed = False
-                    if type(original_value_in_post) != type(final_value_to_write):
+                    if type(original_value_in_post) is not type(final_value_to_write):
                         changed = True
                     elif isinstance(final_value_to_write, list):
                         original_list = (
@@ -838,7 +842,7 @@ class FrontmatterTool(QMainWindow):
                     level="error",
                 )
                 return
-            dryrun = self.dryrun_checkbox.isChecked()
+            dryrun = self.dryrun_checkbox.isChecked() if self.dryrun_checkbox is not None else False
             try:
                 with open(file_path, "r", encoding="utf-8") as f_in:
                     post = frontmatter.load(f_in)
@@ -992,7 +996,7 @@ class FrontmatterTool(QMainWindow):
             )
             return
         params = {"key": key_to_delete}
-        is_dry_run = self.dryrun_checkbox.isChecked()
+        is_dry_run = self.dryrun_checkbox.isChecked() if self.dryrun_checkbox is not None else False
         action = DeleteKeyAction(
             logger_func=self.log_message, params=params, dry_run=is_dry_run
         )
@@ -1022,7 +1026,7 @@ class FrontmatterTool(QMainWindow):
             return
 
         params = {"key": key_to_write, "value": value_to_write}
-        is_dry_run = self.dryrun_checkbox.isChecked()
+        is_dry_run = self.dryrun_checkbox.isChecked() if self.dryrun_checkbox is not None else False
 
         action = WriteKeyValueAction(
             logger_func=self.log_message, params=params, dry_run=is_dry_run
@@ -1085,7 +1089,7 @@ class FrontmatterTool(QMainWindow):
             return
 
         params = {"old_key": old_key_name, "new_key": new_key_name}
-        is_dry_run = self.dryrun_checkbox.isChecked()
+        is_dry_run = self.dryrun_checkbox.isChecked() if self.dryrun_checkbox is not None else False
 
         action_instance = RenameKeyAction(
             logger_func=self.log_message, params=params, dry_run=is_dry_run
@@ -1099,7 +1103,7 @@ class FrontmatterTool(QMainWindow):
         """
         key_to_match = self.key_input.text().strip()
         value_to_match = self.value_input.text().strip()
-        is_dry_run = self.dryrun_checkbox.isChecked()
+        is_dry_run = self.dryrun_checkbox.isChecked() if self.dryrun_checkbox is not None else False
 
         if not key_to_match or not value_to_match:
             QMessageBox.warning(
@@ -1165,7 +1169,7 @@ class FrontmatterTool(QMainWindow):
             return
 
         params = {"key": key_to_check}
-        is_dry_run = self.dryrun_checkbox.isChecked()
+        is_dry_run = self.dryrun_checkbox.isChecked() if self.dryrun_checkbox is not None else False
 
         action_instance = CheckKeyExistsAction(
             logger_func=self.log_message, params=params, dry_run=is_dry_run
@@ -1193,7 +1197,7 @@ class FrontmatterTool(QMainWindow):
             return
 
         params = {"key": key_to_check}
-        is_dry_run = self.dryrun_checkbox.isChecked()
+        is_dry_run = self.dryrun_checkbox.isChecked() if self.dryrun_checkbox is not None else False
 
         action_instance = CheckKeyMissingAction(
             logger_func=self.log_message, params=params, dry_run=is_dry_run
@@ -1237,7 +1241,7 @@ class FrontmatterTool(QMainWindow):
             return
 
         params = {"key": key_to_check, "value": value_to_match}
-        is_dry_run = self.dryrun_checkbox.isChecked()
+        is_dry_run = self.dryrun_checkbox.isChecked() if self.dryrun_checkbox is not None else False
 
         action_instance = CheckKeyValueMatchAction(
             logger_func=self.log_message, params=params, dry_run=is_dry_run
@@ -1314,7 +1318,7 @@ class FrontmatterTool(QMainWindow):
                         level="warn",
                     )
                     return
-                dryrun = self.dryrun_checkbox.isChecked()
+                dryrun = self.dryrun_checkbox.isChecked() if self.dryrun_checkbox is not None else False
                 try:
                     with open(file_path, "r", encoding="utf-8") as f_in:
                         post = frontmatter.load(f_in)
