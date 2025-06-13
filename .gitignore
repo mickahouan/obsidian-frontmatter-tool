@@ -3,6 +3,8 @@
 # Edit at https://www.toptal.com/developers/gitignore?templates=visualstudiocode,linux,python
 translate.sh
 translations/scripts
+.vscode
+.idea
 ### Linux ###
 *~
 
