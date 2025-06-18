@@ -70,10 +70,21 @@ class FrontmatterTool(QMainWindow):
 
         self.init_ui()
         self.setStyleSheet(get_cyberpunk_stylesheet())
+        self.status = self.statusBar()
         self._init_menu()
 
     def _init_menu(self):
         menubar = self.menuBar()
+
+        file_menu = menubar.addMenu(QCoreApplication.translate("MainWindow", "Datei"))
+        open_action = QAction(QCoreApplication.translate("MainWindow", "Verzeichnis öffnen"), self)
+        quit_action = QAction(QCoreApplication.translate("MainWindow", "Beenden"), self)
+        open_action.triggered.connect(self.select_directory)
+        quit_action.triggered.connect(self.close)
+        file_menu.addAction(open_action)
+        file_menu.addSeparator()
+        file_menu.addAction(quit_action)
+
         lang_menu = QMenu(QCoreApplication.translate("MainWindow", "Sprache"), self)
         action_de = QAction("Deutsch", self)
         action_en = QAction("English", self)
@@ -628,6 +639,8 @@ class FrontmatterTool(QMainWindow):
         }.get(level, "font-weight:normal;")
         html = f'<span style="color:{color};{style}">{emoji} {msg}</span>'
         self.log_text.append(html)
+        if hasattr(self, "status"):
+            self.status.showMessage(msg, 5000)
         QApplication.processEvents()
 
     def clear_log(self):
