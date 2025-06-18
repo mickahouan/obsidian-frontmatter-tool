@@ -7,6 +7,8 @@ from PySide6.QtCore import QCoreApplication, Qt
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QComboBox,
+    QMenu,
+    QAction,
     QTableWidget,
     QTableWidgetItem,
 )
@@ -50,6 +52,10 @@ class FrontmatterTableViewer(QTableWidget):
         self.setColumnWidth(0, 120)
         self.setColumnWidth(1, 120)
         self.setColumnWidth(2, 300)
+
+        # Kontextmenü für Zeilen hinzufügen/löschen
+        self.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        self.customContextMenuRequested.connect(self._show_context_menu)
 
     def display_frontmatter(self, metadata: dict):
         """
@@ -108,3 +114,38 @@ class FrontmatterTableViewer(QTableWidget):
         Löscht die Tabelle.
         """
         self.setRowCount(0)
+
+    # Neue Komfortfunktionen ----------------------------------------------
+    def _show_context_menu(self, pos):
+        menu = QMenu(self)
+        add_action = QAction(
+            QCoreApplication.translate("FrontmatterTableViewer", "Zeile hinzufügen"),
+            self,
+        )
+        del_action = QAction(
+            QCoreApplication.translate("FrontmatterTableViewer", "Zeile löschen"),
+            self,
+        )
+        add_action.triggered.connect(self.add_row)
+        del_action.triggered.connect(self.delete_selected_row)
+        menu.addAction(add_action)
+        if self.currentRow() >= 0:
+            menu.addAction(del_action)
+        else:
+            del_action.setEnabled(False)
+            menu.addAction(del_action)
+        menu.exec(self.viewport().mapToGlobal(pos))
+
+    def add_row(self):
+        row = self.rowCount()
+        self.insertRow(row)
+        type_combo = QComboBox()
+        type_combo.addItems(FRONTMATTER_TYPES)
+        self.setCellWidget(row, 0, type_combo)
+        self.setItem(row, 1, QTableWidgetItem(""))
+        self.setItem(row, 2, QTableWidgetItem(""))
+
+    def delete_selected_row(self):
+        row = self.currentRow()
+        if row >= 0:
+            self.removeRow(row)
