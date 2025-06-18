@@ -4,6 +4,8 @@ A powerful, modular desktop tool (PySide6) for convenient editing, analysis and 
 
 ![Screenshot](image-en.png)
 
+*Translations: [Deutsch](README_de.md) | [Français](README_fr.md)*
+
 ## Features
 
 * **File explorer** with context menu for individual file actions (write key/value, delete key, rename key, delete file)
@@ -51,11 +53,17 @@ python main.py
 
 ## Language selection
 
-The user interface language is set to English by default.
+The user interface language is set to French by default.
 
-You can change the language at any time while the program is running via the **Language** menu (at the top menu bar), switching between English and German.
+You can change the language at any time while the program is running via the **Language** menu (at the top menu bar), switching between French, English and German.
 
 Manual editing of the `main.py` file is no longer necessary.
+
+If you cloned the project, generate the French translation by running:
+
+```zsh
+pyside6-lrelease translations/fr.ts -qm translations/fr.qm
+```
 
 ## Execute tests
 

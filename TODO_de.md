@@ -1,6 +1,6 @@
 ## Hinweis zur Sprache
 
-Die Sprache der Anwendung kann jetzt jederzeit über das Menü **Language** gewechselt werden (Deutsch/Englisch). Ein manueller Eingriff in `main.py` ist nicht mehr nötig.
+Die Sprache der Anwendung kann jetzt jederzeit über das Menü **Language** gewechselt werden (Deutsch/Englisch/Französisch). Ein manueller Eingriff in `main.py` ist nicht mehr nötig.
 
 ## Milestone 1: Grundgerüst und Kernfunktionalität (Abgeschlossen)
 

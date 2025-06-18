@@ -52,7 +52,7 @@ class FrontmatterTool(QMainWindow):
     Stellt die Benutzeroberfläche bereit und implementiert die zentrale Logik für die Bearbeitung von Frontmatter in Markdown-Dateien.
     """
 
-    def __init__(self, language="en", app_translator=None):
+    def __init__(self, language="fr", app_translator=None):
         """
         Initialisiert das Hauptfenster und die UI-Komponenten.
         """
@@ -77,12 +77,16 @@ class FrontmatterTool(QMainWindow):
         lang_menu = QMenu(QCoreApplication.translate("MainWindow", "Sprache"), self)
         action_de = QAction("Deutsch", self)
         action_en = QAction("English", self)
+        action_fr = QAction("Français", self)
         action_de.setCheckable(True)
         action_en.setCheckable(True)
+        action_fr.setCheckable(True)
         action_de.setChecked(self.language == "de")
         action_en.setChecked(self.language == "en")
+        action_fr.setChecked(self.language == "fr")
         lang_menu.addAction(action_de)
         lang_menu.addAction(action_en)
+        lang_menu.addAction(action_fr)
         menubar.addMenu(lang_menu)
 
         def set_lang_de():
@@ -91,9 +95,13 @@ class FrontmatterTool(QMainWindow):
         def set_lang_en():
             self._change_language("en")
 
+        def set_lang_fr():
+            self._change_language("fr")
+
         action_de.triggered.connect(set_lang_de) # type: ignore
         action_en.triggered.connect(set_lang_en) # type: ignore
-        self._lang_actions = {"de": action_de, "en": action_en}
+        action_fr.triggered.connect(set_lang_fr) # type: ignore
+        self._lang_actions = {"de": action_de, "en": action_en, "fr": action_fr}
 
     def _change_language(self, lang):
         if lang == self.language:
@@ -104,6 +112,8 @@ class FrontmatterTool(QMainWindow):
             self.translator = QTranslator()
         if lang == "de":
             self.translator.load("translations/de.qm")
+        elif lang == "fr":
+            self.translator.load("translations/fr.qm")
         else:
             self.translator.load("translations/en.qm")
         app = QCoreApplication.instance()
