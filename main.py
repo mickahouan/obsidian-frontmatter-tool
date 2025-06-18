@@ -19,12 +19,14 @@ def start_app():
         SystemExit: If the application is closed, sys.exit() is called to exit the program.
     """
     app = QApplication(sys.argv)
-    # Sprachwahl: 'de' für Deutsch, 'en' für Englisch
-    language = "en"  # <--- hier Sprache ändern: 'de' oder 'en'
+    # Sprachwahl: 'de' für Deutsch, 'en' für Englisch, 'fr' für Französisch
+    language = "fr"  # <--- hier Sprache ändern: 'de', 'en' oder 'fr'
     translator = QTranslator()
     if language == "de":
         translator.load("translations/de.qm")
-    elif language == "en":
+    elif language == "fr":
+        translator.load("translations/fr.qm")
+    else:
         translator.load("translations/en.qm")
     app.installTranslator(translator)
     window = FrontmatterTool(language=language, app_translator=translator)
@@ -34,10 +36,12 @@ def start_app():
 
 def show_table_demo():
     app = QApplication(sys.argv)
-    language = "en"  # <--- hier Sprache ändern: 'de' oder 'en'
+    language = "fr"  # <--- hier Sprache ändern: 'de', 'en' oder 'fr'
     translator = QTranslator()
     if language == "de":
         translator.load("translations_de.qm")
+    elif language == "fr":
+        translator.load("translations_fr.qm")
     elif language == "en":
         translator.load("translations_en.qm")
     app.installTranslator(translator)

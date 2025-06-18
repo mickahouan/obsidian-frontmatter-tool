@@ -1,6 +1,6 @@
 ## Note on language
 
-The application language can now be changed at any time via the **Language** menu (German/English). Manual editing of `main.py` is no longer required.
+The application language can now be changed at any time via the **Language** menu (German/English/French). Manual editing of `main.py` is no longer required.
 
 ## Milestone 1: Basic framework and core functionality (Completed)
 
